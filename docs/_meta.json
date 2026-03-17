@@ -1,0 +1,58 @@
+[
+    {
+    "type": "dir",
+    "name": "文档合集",
+    "label": "文档合集",
+    "collapsible": true,
+    "collapsed": false
+  },
+    {
+    "type": "dir",
+    "name": "游戏资源",
+    "label": "🎮游戏资源",
+    "collapsible": true,
+    "collapsed": true
+  },
+  {
+    "type": "dir",
+    "name": "免费资源",
+    "label": "💰免费资源",
+    "collapsible": true,
+    "collapsed": true
+  },
+    {
+    "type": "dir",
+    "name": "实用工具",
+    "label": "🛠️实用工具",
+    "collapsible": true,
+    "collapsed": true
+  },
+  {
+    "type": "dir",
+    "name": "阅读笔记",
+    "label": "📖阅读笔记",
+    "collapsible": true,
+    "collapsed": true
+  },
+  {
+    "type": "dir",
+    "name": "学习笔记",
+    "label": "📚学习笔记",
+    "collapsible": true,
+    "collapsed": true
+  },
+  {
+    "type": "dir",
+    "name": "成长记录",
+    "label": "🎬成长记录",
+    "collapsible": true,
+    "collapsed": true
+  },
+  {
+    "type": "dir",
+    "name": "研究记录",
+    "label": "🎓研究记录",
+    "collapsible": true,
+    "collapsed": true
+  }
+]
