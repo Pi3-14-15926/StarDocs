@@ -12,8 +12,8 @@ hero:
       text: 文档合集
       link: /文档合集/
     - theme: alt
-      text: 我的博客
-      link: https://github.com/web-infra-dev/rspress
+      text: 我的导航
+      link: https://qiyinqin.cn/
   image:
     src: https://i.postimg.cc/pVBQkj82/bigdog.png
     alt: Logo
