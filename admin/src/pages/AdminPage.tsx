@@ -125,7 +125,7 @@ export function AdminPage() {
         <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 dark:border-gray-700">
           <div className="flex items-center gap-2">
             <FileText size={20} className="text-brand" />
-            <span className="font-semibold text-gray-900 dark:text-gray-100">Rspress Admin</span>
+            <span className="font-semibold text-gray-900 dark:text-gray-100">文档管理</span>
           </div>
           {isMobile && (
             <button onClick={() => setShowSidebar(false)} className="btn-ghost p-1">

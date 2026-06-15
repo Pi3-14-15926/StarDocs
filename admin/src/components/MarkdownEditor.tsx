@@ -41,7 +41,7 @@ function EditorToolbar({ onInsert }: EditorToolbarProps) {
 }
 
 export function MarkdownEditor() {
-  const { currentContent, currentPath, setCurrentContent, saveDocument, isSaving, lastSaved, renameDocument } =
+  const { currentContent, currentPath, setCurrentContent, saveDocument, isSaving, lastSaved, renameDocument, isLoading } =
     useDocumentStore();
   const [isPreview, setIsPreview] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -52,12 +52,18 @@ export function MarkdownEditor() {
 
   useEffect(() => {
     if (currentPath !== prevPath) {
-      setLocalContent(currentContent);
       setPrevPath(currentPath);
+      setLocalContent('');
       setIsPreview(false);
       setIsRenaming(false);
     }
-  }, [currentContent, currentPath, prevPath]);
+  }, [currentPath, prevPath]);
+
+  useEffect(() => {
+    if (!isLoading && currentPath === prevPath) {
+      setLocalContent(currentContent);
+    }
+  }, [currentContent, isLoading, currentPath, prevPath]);
 
   const handleSave = useCallback(async () => {
     setCurrentContent(localContent);

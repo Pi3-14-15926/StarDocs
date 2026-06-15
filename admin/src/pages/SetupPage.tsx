@@ -49,7 +49,7 @@ export function SetupPage() {
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-brand/10">
             <Settings size={32} className="text-brand" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Rspress Admin</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">文档管理</h1>
           <p className="mt-2 text-sm text-gray-500">配置 GitHub 仓库连接</p>
         </div>
 
