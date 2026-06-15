@@ -77,14 +77,19 @@ function generateFrontmatter(data: Frontmatter): string {
     if (value === undefined || value === null) continue;
 
     if (Array.isArray(value)) {
+      if (value.length === 0) continue;
       lines.push(`${key}:`);
       for (const item of value) {
-        lines.push(`  - ${item}`);
+        lines.push(`  - "${String(item).replace(/"/g, '\\"')}"`);
       }
-    } else if (typeof value === 'string' && (value.includes(':') || value.includes('#'))) {
-      lines.push(`${key}: "${value}"`);
-    } else {
+    } else if (typeof value === 'boolean') {
       lines.push(`${key}: ${value}`);
+    } else if (typeof value === 'number') {
+      lines.push(`${key}: "${value}"`);
+    } else if (typeof value === 'string') {
+      const trimmed = value.trim();
+      if (trimmed === '') continue;
+      lines.push(`${key}: "${trimmed.replace(/"/g, '\\"')}"`);
     }
   }
 

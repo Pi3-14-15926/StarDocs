@@ -36,6 +36,36 @@ jobs:
         uses: actions/configure-pages@v5
       - name: Install dependencies
         run: pnpm install
+      - name: Fix unquoted numbers in frontmatter
+        run: |
+          node -e "
+          const fs = require('fs');
+          const path = require('path');
+          function fixDir(dir) {
+            for (const f of fs.readdirSync(dir, {withFileTypes: true})) {
+              const full = path.join(dir, f.name);
+              if (f.isDirectory()) { fixDir(full); continue; }
+              if (!f.name.endsWith('.md')) continue;
+              let c = fs.readFileSync(full, 'utf8').replace(/^\uFEFF/, '');
+              const m = c.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+              if (!m) continue;
+              let yaml = m[1], changed = false;
+              yaml = yaml.replace(/^(\w[\w-]*): (\S+)$/gm, (match, k, v) => {
+                if (/^-?\d+(\.\d+)?$/.test(v) || v === 'true' || v === 'false') {
+                  changed = true;
+                  return k + ': \"' + v + '\"';
+                }
+                return match;
+              });
+              if (changed) {
+                const newContent = c.replace(/^---\r?\n[\s\S]*?\r?\n---/, '---\n' + yaml + '\n---');
+                fs.writeFileSync(full, newContent, 'utf8');
+                console.log('Fixed: ' + full);
+              }
+            }
+          }
+          fixDir('docs');
+          "
       - name: Build with Rspress
         run: pnpm run build
       - name: Install admin dependencies
