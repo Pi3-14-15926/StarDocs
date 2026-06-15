@@ -76,8 +76,19 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
   lastSaved: null,
 
   loadTree: async () => {
-    const { githubService } = useConfigStore.getState();
+    let { githubService } = useConfigStore.getState();
     const { github } = useConfigStore.getState();
+
+    if (!githubService) {
+      await new Promise<void>((resolve) => {
+        const timer = setTimeout(() => {
+          githubService = useConfigStore.getState().githubService;
+          resolve();
+        }, 300);
+        return () => clearTimeout(timer);
+      });
+    }
+
     if (!githubService) {
       console.error('GitHub service not initialized');
       return;
