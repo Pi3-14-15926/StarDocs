@@ -23,6 +23,7 @@ interface DocumentState {
   saveDocument: () => Promise<void>;
   createDocument: (path: string, frontmatter: Frontmatter, content: string) => Promise<void>;
   deleteDocument: (path: string) => Promise<void>;
+  renameDocument: (newPath: string) => Promise<void>;
   setSearchQuery: (query: string) => void;
   toggleExpanded: (path: string) => Promise<void>;
 }
@@ -215,6 +216,31 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
       node.sha || '',
     );
     set({ tree: removeNode(tree, path) });
+  },
+
+  renameDocument: async (newPath) => {
+    const { githubService } = useConfigStore.getState();
+    const { github } = useConfigStore.getState();
+    const { currentPath } = get();
+    if (!githubService || !currentPath) return;
+
+    set({ isLoading: true });
+    try {
+      await githubService.renameFile(
+        github.owner,
+        github.repo,
+        currentPath,
+        newPath,
+        github.branch,
+      );
+      set({ currentPath: newPath });
+      await get().loadTree();
+    } catch (error) {
+      console.error('Failed to rename document:', error);
+      throw error;
+    } finally {
+      set({ isLoading: false });
+    }
   },
 
   setSearchQuery: (query) => set({ searchQuery: query }),

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Save, Eye, Edit3, Bold, Italic, Code, Link, Image, List, Heading1, Heading2 } from 'lucide-react';
+import { Save, Eye, Edit3, Bold, Italic, Code, Link, Image, List, Heading1, Heading2, Pencil } from 'lucide-react';
 import { useDocumentStore } from '@/stores/documentStore';
+import { showAlert } from '@/hooks/useAlert';
 import clsx from 'clsx';
 
 interface EditorToolbarProps {
@@ -40,18 +41,21 @@ function EditorToolbar({ onInsert }: EditorToolbarProps) {
 }
 
 export function MarkdownEditor() {
-  const { currentContent, currentPath, setCurrentContent, saveDocument, isSaving, lastSaved } =
+  const { currentContent, currentPath, setCurrentContent, saveDocument, isSaving, lastSaved, renameDocument } =
     useDocumentStore();
   const [isPreview, setIsPreview] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [localContent, setLocalContent] = useState('');
   const [prevPath, setPrevPath] = useState<string | null>(null);
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [newName, setNewName] = useState('');
 
   useEffect(() => {
     if (currentPath !== prevPath) {
       setLocalContent(currentContent);
       setPrevPath(currentPath);
       setIsPreview(false);
+      setIsRenaming(false);
     }
   }, [currentContent, currentPath, prevPath]);
 
@@ -59,6 +63,20 @@ export function MarkdownEditor() {
     setCurrentContent(localContent);
     await saveDocument();
   }, [localContent, setCurrentContent, saveDocument]);
+
+  const handleRename = useCallback(async () => {
+    if (!currentPath || !newName.trim()) return;
+    const fileName = newName.trim();
+    const finalName = fileName.endsWith('.md') ? fileName : `${fileName}.md`;
+    const dir = currentPath.substring(0, currentPath.lastIndexOf('/'));
+    const newPath = `${dir}/${finalName}`;
+    try {
+      await renameDocument(newPath);
+      setIsRenaming(false);
+    } catch (error) {
+      showAlert('error', '重命名失败', error instanceof Error ? error.message : '未知错误');
+    }
+  }, [currentPath, newName, renameDocument]);
 
   const handleInsert = useCallback(
     (before: string, after?: string) => {
@@ -106,9 +124,44 @@ export function MarkdownEditor() {
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between border-b border-gray-200 px-3 py-2 dark:border-gray-700">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
-            {currentPath.split('/').pop()}
-          </span>
+          {isRenaming ? (
+            <div className="flex items-center gap-1">
+              <input
+                type="text"
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleRename();
+                  if (e.key === 'Escape') setIsRenaming(false);
+                }}
+                className="input-field w-48 py-1 text-sm"
+                autoFocus
+                placeholder="新文件名"
+              />
+              <button onClick={handleRename} className="btn-primary px-2 py-1 text-xs">
+                确认
+              </button>
+              <button onClick={() => setIsRenaming(false)} className="btn-ghost px-2 py-1 text-xs">
+                取消
+              </button>
+            </div>
+          ) : (
+            <>
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                {currentPath.split('/').pop()}
+              </span>
+              <button
+                onClick={() => {
+                  setNewName(currentPath.split('/').pop() || '');
+                  setIsRenaming(true);
+                }}
+                className="text-gray-400 hover:text-brand transition-colors"
+                title="重命名"
+              >
+                <Pencil size={14} />
+              </button>
+            </>
+          )}
           {lastSaved && (
             <span className="text-xs text-gray-400">
               已保存 {new Date(lastSaved).toLocaleTimeString()}

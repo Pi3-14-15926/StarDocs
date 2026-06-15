@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import type { DocumentNode } from '@/types';
 import { useDocumentStore } from '@/stores/documentStore';
+import { ConfirmDialog } from './ConfirmDialog';
 import clsx from 'clsx';
 
 interface TreeNodeProps {
@@ -23,6 +24,7 @@ function TreeNodeComponent({ node, level = 0 }: TreeNodeProps) {
   const { currentPath, loadDocument, expandedPaths, toggleExpanded, deleteDocument } =
     useDocumentStore();
   const [isLoadingChildren, setIsLoadingChildren] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const isExpanded = expandedPaths.has(node.path);
   const isActive = currentPath === node.path;
   const isDir = node.type === 'directory';
@@ -40,12 +42,15 @@ function TreeNodeComponent({ node, level = 0 }: TreeNodeProps) {
   const handleDelete = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
-      if (confirm(`确定删除 ${node.name}？`)) {
-        deleteDocument(node.path);
-      }
+      setShowDeleteConfirm(true);
     },
-    [node.path, node.name, deleteDocument],
+    [],
   );
+
+  const confirmDelete = useCallback(async () => {
+    setShowDeleteConfirm(false);
+    await deleteDocument(node.path);
+  }, [node.path, deleteDocument]);
 
   const icon = isDir ? (
     isLoadingChildren ? (
@@ -103,6 +108,15 @@ function TreeNodeComponent({ node, level = 0 }: TreeNodeProps) {
             ))}
         </div>
       )}
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        title="删除文档"
+        message={`确定删除 ${node.name}？此操作不可恢复。`}
+        confirmText="删除"
+        danger
+        onConfirm={confirmDelete}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
     </div>
   );
 }

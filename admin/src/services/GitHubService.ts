@@ -117,6 +117,18 @@ export class GitHubService {
     });
   }
 
+  async renameFile(
+    owner: string,
+    repo: string,
+    oldPath: string,
+    newPath: string,
+    branch: string,
+  ): Promise<void> {
+    const { content, sha: oldSha } = await this.getFile(owner, repo, oldPath, branch);
+    await this.createOrUpdateFile(owner, repo, newPath, content, `docs: rename ${oldPath.split('/').pop()} → ${newPath.split('/').pop()}`, branch);
+    await this.deleteFile(owner, repo, oldPath, `docs: delete old file ${oldPath.split('/').pop()}`, branch, oldSha);
+  }
+
   async getCommits(
     owner: string,
     repo: string,

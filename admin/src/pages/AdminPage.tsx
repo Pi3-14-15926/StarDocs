@@ -18,8 +18,10 @@ import { FrontmatterEditor } from '@/components/FrontmatterEditor';
 import { AIToolbar } from '@/components/AIToolbar';
 import { ImageUploader } from '@/components/ImageUploader';
 import { NewDocumentDialog } from '@/components/NewDocumentDialog';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { useDocumentStore } from '@/stores/documentStore';
 import { useConfigStore } from '@/stores/configStore';
+import { showAlert } from '@/hooks/useAlert';
 import clsx from 'clsx';
 
 export function AdminPage() {
@@ -34,6 +36,7 @@ export function AdminPage() {
     document.documentElement.classList.contains('dark'),
   );
   const [isMobile, setIsMobile] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -57,19 +60,24 @@ export function AdminPage() {
 
   const handleDelete = useCallback(async () => {
     if (!currentPath) return;
-    if (!confirm(`确定删除 ${currentPath.split('/').pop()}？`)) return;
+    setShowDeleteConfirm(true);
+  }, [currentPath]);
+
+  const confirmDelete = useCallback(async () => {
+    if (!currentPath) return;
+    setShowDeleteConfirm(false);
     try {
       await deleteDocument(currentPath);
-      alert('删除成功');
+      showAlert('success', '删除成功', '文档已删除');
     } catch (error) {
-      alert(`删除失败: ${error instanceof Error ? error.message : '未知错误'}`);
+      showAlert('error', '删除失败', error instanceof Error ? error.message : '未知错误');
     }
   }, [currentPath, deleteDocument]);
 
   const handleCopyPath = useCallback(() => {
     if (!currentPath) return;
     navigator.clipboard.writeText(currentPath);
-    alert('路径已复制');
+    showAlert('success', '已复制', '路径已复制到剪贴板');
   }, [currentPath]);
 
   const fileName = currentPath?.split('/').pop() ?? '';
@@ -314,6 +322,15 @@ export function AdminPage() {
       </main>
 
       <NewDocumentDialog isOpen={showNewDoc} onClose={() => setShowNewDoc(false)} />
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        title="删除文档"
+        message={`确定删除 ${currentPath?.split('/').pop()}？此操作不可恢复。`}
+        confirmText="删除"
+        danger
+        onConfirm={confirmDelete}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
     </div>
   );
 }

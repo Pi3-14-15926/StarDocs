@@ -4,6 +4,7 @@ import { SetupPage } from './pages/SetupPage';
 import { AdminPage } from './pages/AdminPage';
 import { AIConfigPage } from './pages/AIConfigPage';
 import { useConfigStore } from './stores/configStore';
+import { useAlert } from './hooks/useAlert';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { github } = useConfigStore();
@@ -15,24 +16,28 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   const { initServices } = useConfigStore();
+  const { AlertComponent } = useAlert();
 
   useEffect(() => {
     initServices();
   }, [initServices]);
 
   return (
-    <Routes>
-      <Route path="/admin/setup" element={<SetupPage />} />
-      <Route
-        path="/admin"
-        element={
-          <ProtectedRoute>
-            <AdminPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route path="/admin/ai-config" element={<AIConfigPage />} />
-      <Route path="*" element={<Navigate to="/admin" replace />} />
-    </Routes>
+    <>
+      <Routes>
+        <Route path="/admin/setup" element={<SetupPage />} />
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute>
+              <AdminPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/admin/ai-config" element={<AIConfigPage />} />
+        <Route path="*" element={<Navigate to="/admin" replace />} />
+      </Routes>
+      {AlertComponent}
+    </>
   );
 }

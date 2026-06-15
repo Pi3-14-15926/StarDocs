@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { X, FolderPlus } from 'lucide-react';
 import { useDocumentStore } from '@/stores/documentStore';
 import { useConfigStore } from '@/stores/configStore';
+import { showAlert } from '@/hooks/useAlert';
 
 interface NewDocumentDialogProps {
   isOpen: boolean;
@@ -41,7 +42,7 @@ export function NewDocumentDialog({ isOpen, onClose }: NewDocumentDialogProps) {
       onClose();
     } catch (error) {
       console.error('Failed to create document:', error);
-      alert('创建失败');
+      showAlert('error', '创建失败', error instanceof Error ? error.message : '请重试');
     } finally {
       setIsCreating(false);
     }
