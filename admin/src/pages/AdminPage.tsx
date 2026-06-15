@@ -37,12 +37,29 @@ export function AdminPage() {
   );
   const [isMobile, setIsMobile] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [selectedText, setSelectedText] = useState('');
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
     check();
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
+  }, []);
+
+  useEffect(() => {
+    const handleSelect = () => {
+      const textarea = document.querySelector('textarea');
+      if (textarea) {
+        const text = textarea.value.substring(textarea.selectionStart, textarea.selectionEnd);
+        setSelectedText(text);
+      }
+    };
+    document.addEventListener('selectionchange', handleSelect);
+    document.addEventListener('mouseup', handleSelect);
+    return () => {
+      document.removeEventListener('selectionchange', handleSelect);
+      document.removeEventListener('mouseup', handleSelect);
+    };
   }, []);
 
   useEffect(() => {
@@ -163,7 +180,7 @@ export function AdminPage() {
 
             <div className="flex items-center gap-2">
               <AIToolbar
-                selectedText=""
+                selectedText={selectedText}
                 onReplace={(text) => {
                   const editor = document.querySelector('textarea');
                   if (editor) {
@@ -232,7 +249,7 @@ export function AdminPage() {
             {currentPath && (
               <div className="flex items-center gap-1 border-t border-gray-100 px-2 py-1.5 dark:border-gray-700">
                 <AIToolbar
-                  selectedText=""
+                  selectedText={selectedText}
                   onReplace={(text) => {
                     const editor = document.querySelector('textarea');
                     if (editor) {

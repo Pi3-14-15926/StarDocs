@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { Sparkles, ChevronDown, Wand2, Expand, Shrink, MessageSquare, Languages, Tag, FileText, HelpCircle } from 'lucide-react';
+import { Sparkles, ChevronDown, Wand2, Expand, Shrink, MessageSquare, Languages, Tag, FileText, HelpCircle, X, Check, Loader2 } from 'lucide-react';
 import type { AIAction } from '@/types';
 import { useConfigStore } from '@/stores/configStore';
 import { useDocumentStore } from '@/stores/documentStore';
@@ -126,25 +126,53 @@ export function AIToolbar({ selectedText, onReplace, onInsert }: AIToolbarProps)
       )}
 
       {isProcessing && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-800">
-            <div className="flex flex-col items-center gap-3">
-              <div className="h-8 w-8 animate-spin rounded-full border-3 border-brand border-t-transparent" />
-              <span className="text-sm text-gray-600 dark:text-gray-300">AI处理中...</span>
-            </div>
+        <div className="fixed inset-x-0 top-20 z-50 flex justify-center">
+          <div className="flex items-center gap-3 rounded-full bg-white px-6 py-3 shadow-lg ring-1 ring-black/5 dark:bg-gray-800">
+            <Loader2 size={18} className="animate-spin text-brand" />
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-200">AI 处理中...</span>
           </div>
         </div>
       )}
 
       {result && !isProcessing && (
-        <div className="fixed inset-x-0 bottom-0 z-50 rounded-t-2xl bg-white p-4 shadow-2xl sm:fixed sm:inset-auto sm:right-4 sm:bottom-4 sm:max-w-md sm:rounded-2xl dark:border-gray-700 dark:bg-gray-800">
-          <div className="mb-3 flex items-center justify-between">
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-200">AI 结果</span>
-            <button onClick={() => setResult('')} className="text-xs text-gray-400 hover:text-gray-600">
-              关闭
-            </button>
+        <div className="fixed inset-x-0 top-16 z-50 flex justify-center px-4">
+          <div className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 dark:bg-gray-800">
+            <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3 dark:border-gray-700">
+              <div className="flex items-center gap-2">
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-brand/10">
+                  <Sparkles size={12} className="text-brand" />
+                </div>
+                <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">AI 生成结果</span>
+              </div>
+              <button
+                onClick={() => setResult('')}
+                className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700"
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <div className="max-h-[40vh] overflow-y-auto p-4">
+              <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-700 dark:text-gray-200">{result}</p>
+            </div>
+            <div className="flex gap-2 border-t border-gray-100 px-4 py-3 dark:border-gray-700">
+              <button
+                onClick={() => {
+                  onReplace(result);
+                  setResult('');
+                }}
+                className="btn-primary flex-1"
+              >
+                <Check size={14} />
+                应用替换
+              </button>
+              <button
+                onClick={() => setResult('')}
+                className="btn-ghost flex-1"
+              >
+                取消
+              </button>
+            </div>
           </div>
-          <div className="max-h-[50vh] overflow-y-auto rounded-xl bg-gray-50 p-3 text-sm text-gray-800 whitespace-pre-wrap dark:bg-gray-900 dark:text-gray-200">{result}</div>
         </div>
       )}
     </div>
