@@ -42,10 +42,8 @@ jobs:
         run: cd admin && pnpm install
       - name: Build admin
         run: cd admin && pnpm run build
-      - name: List admin build output
-        run: ls -la admin/admin-dist
       - name: Copy admin to doc_build
-        run: cp -r admin/admin-dist doc_build/admin
+        run: cp -r admin-dist doc_build/admin
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
