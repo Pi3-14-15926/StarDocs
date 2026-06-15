@@ -13,7 +13,7 @@ hero:
       link: /文档合集/
     - theme: alt
       text: 我的导航
-      link: https://qiyinqin.cn/
+      link: https://www.qiyinqin.cn/
   image:
     src: https://i.postimg.cc/pVBQkj82/bigdog.png
     alt: Logo
