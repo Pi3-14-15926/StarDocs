@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { DocumentNode, Frontmatter } from '@/types';
 import { useConfigStore } from './configStore';
 import { adapter } from '@/adapters/RspressAdapter';
+import { showAlert } from '@/hooks/useAlert';
 
 interface DocumentState {
   tree: DocumentNode[];
@@ -94,7 +95,7 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
       set({ tree });
     } catch (error) {
       console.error('Failed to load tree:', error);
-      alert(`加载文档树失败: ${error instanceof Error ? error.message : '未知错误'}`);
+      showAlert('error', '加载失败', error instanceof Error ? error.message : '加载文档树失败');
     } finally {
       set({ isLoading: false });
     }
@@ -144,7 +145,7 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
       });
     } catch (error) {
       console.error('Failed to load document:', error);
-      alert(`加载文档失败: ${error instanceof Error ? error.message : '未知错误'}`);
+      showAlert('error', '加载失败', error instanceof Error ? error.message : '加载文档失败');
     } finally {
       set({ isLoading: false });
     }
@@ -173,6 +174,7 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
         currentSha,
       );
       set({ currentSha: sha, lastSaved: new Date().toISOString() });
+      await get().loadTree();
     } catch (error) {
       console.error('Failed to save document:', error);
       throw error;
@@ -215,7 +217,7 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
       github.branch,
       node.sha || '',
     );
-    set({ tree: removeNode(tree, path) });
+    await get().loadTree();
   },
 
   renameDocument: async (newPath) => {

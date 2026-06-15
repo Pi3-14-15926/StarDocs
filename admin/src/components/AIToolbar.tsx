@@ -85,6 +85,7 @@ export function AIToolbar({ selectedText, onReplace, onInsert }: AIToolbarProps)
   return (
     <div className="relative" ref={dropdownRef}>
       <button
+        onMouseDown={(e) => e.preventDefault()}
         onClick={() => setIsOpen(!isOpen)}
         disabled={isProcessing}
         className={clsx(
@@ -108,6 +109,7 @@ export function AIToolbar({ selectedText, onReplace, onInsert }: AIToolbarProps)
               {AI_ACTIONS.map(({ action, label, description, icon: Icon }) => (
                 <button
                   key={action}
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={() => handleAction(action)}
                   className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left transition-colors hover:bg-gray-50 active:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700 sm:px-3 sm:py-2"
                 >

@@ -50,15 +50,21 @@ export function AdminPage() {
     const handleSelect = () => {
       const textarea = document.querySelector('textarea');
       if (textarea) {
-        const text = textarea.value.substring(textarea.selectionStart, textarea.selectionEnd);
-        setSelectedText(text);
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        if (start !== end) {
+          const text = textarea.value.substring(start, end);
+          setSelectedText(text);
+        }
       }
     };
     document.addEventListener('selectionchange', handleSelect);
     document.addEventListener('mouseup', handleSelect);
+    document.addEventListener('touchend', handleSelect);
     return () => {
       document.removeEventListener('selectionchange', handleSelect);
       document.removeEventListener('mouseup', handleSelect);
+      document.removeEventListener('touchend', handleSelect);
     };
   }, []);
 
