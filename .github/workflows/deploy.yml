@@ -23,8 +23,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Not needed if lastUpdated is not enabled
-      - uses: pnpm/action-setup@v3 # pnpm is optional but recommended, you can also use npm / yarn
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v3
         with:
           version: 8
       - name: Setup Node
@@ -37,8 +37,13 @@ jobs:
       - name: Install dependencies
         run: pnpm install
       - name: Build with Rspress
-        run: |
-          pnpm run build
+        run: pnpm run build
+      - name: Install admin dependencies
+        run: cd admin && pnpm install
+      - name: Build admin
+        run: cd admin && pnpm run build
+      - name: Copy admin to doc_build
+        run: cp -r admin/admin-dist doc_build/admin
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
