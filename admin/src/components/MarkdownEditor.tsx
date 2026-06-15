@@ -45,30 +45,24 @@ export function MarkdownEditor() {
     useDocumentStore();
   const [isPreview, setIsPreview] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [isEditing, setIsEditing] = useState(false);
   const [localContent, setLocalContent] = useState('');
-  const [prevPath, setPrevPath] = useState<string | null>(null);
   const [isRenaming, setIsRenaming] = useState(false);
   const [newName, setNewName] = useState('');
 
-  useEffect(() => {
-    if (currentPath !== prevPath) {
-      setPrevPath(currentPath);
-      setLocalContent('');
-      setIsPreview(false);
-      setIsRenaming(false);
-    }
-  }, [currentPath, prevPath]);
+  const displayContent = isEditing ? localContent : currentContent;
 
   useEffect(() => {
-    if (!isLoading && currentPath === prevPath) {
-      setLocalContent(currentContent);
-    }
-  }, [currentContent, isLoading, currentPath, prevPath]);
+    setIsEditing(false);
+    setLocalContent('');
+    setIsPreview(false);
+    setIsRenaming(false);
+  }, [currentPath]);
 
   const handleSave = useCallback(async () => {
-    setCurrentContent(localContent);
+    setCurrentContent(displayContent);
     await saveDocument();
-  }, [localContent, setCurrentContent, saveDocument]);
+  }, [displayContent, setCurrentContent, saveDocument]);
 
   const handleRename = useCallback(async () => {
     if (!currentPath || !newName.trim()) return;
@@ -89,12 +83,17 @@ export function MarkdownEditor() {
       const textarea = textareaRef.current;
       if (!textarea) return;
 
+      if (!isEditing) {
+        setIsEditing(true);
+        setLocalContent(currentContent);
+      }
+
       const start = textarea.selectionStart;
       const end = textarea.selectionEnd;
-      const selected = localContent.substring(start, end);
+      const selected = displayContent.substring(start, end);
       const replacement = before + (selected || 'text') + (after || '');
       const newContent =
-        localContent.substring(0, start) + replacement + localContent.substring(end);
+        displayContent.substring(0, start) + replacement + displayContent.substring(end);
 
       setLocalContent(newContent);
 
@@ -104,7 +103,7 @@ export function MarkdownEditor() {
         textarea.setSelectionRange(cursorPos, cursorPos + (selected || 'text').length);
       }, 0);
     },
-    [localContent],
+    [displayContent, currentContent, isEditing],
   );
 
   useEffect(() => {
@@ -193,13 +192,15 @@ export function MarkdownEditor() {
 
       <div className="flex-1 overflow-auto">
         {isPreview ? (
-          <div className="h-full overflow-y-auto p-4 dark:text-gray-200" dangerouslySetInnerHTML={{ __html: renderMarkdown(localContent) }} />
+          <div className="h-full overflow-y-auto p-4 dark:text-gray-200" dangerouslySetInnerHTML={{ __html: renderMarkdown(displayContent) }} />
         ) : (
           <textarea
             ref={textareaRef}
-            key={currentPath}
-            defaultValue={localContent}
-            onChange={(e) => setLocalContent(e.target.value)}
+            value={displayContent}
+            onChange={(e) => {
+              setIsEditing(true);
+              setLocalContent(e.target.value);
+            }}
             className="h-full w-full resize-none border-none bg-transparent p-4 font-mono text-sm focus:outline-none"
             placeholder="开始编写 Markdown..."
             spellCheck={false}
