@@ -54,5 +54,19 @@
     "label": "🎓研究记录",
     "collapsible": true,
     "collapsed": true
+  },
+  {
+    "type": "dir",
+    "name": "导航文档",
+    "label": "🌐导航文档",
+    "collapsible": true,
+    "collapsed": true
+  },
+  {
+    "type": "dir",
+    "name": "应用文档",
+    "label": "🌍应用文档",
+    "collapsible": true,
+    "collapsed": true
   }
 ]

@@ -63,7 +63,7 @@ export default defineConfig({
       },
     ],
     footer: {
-      message: '© 2026 齐尹秦的知识库 • Powered by Rspress',
+      message: '© 2026 StarDocs · Built by 齐尹秦',
     },
   },
 });
