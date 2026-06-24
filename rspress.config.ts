@@ -18,7 +18,7 @@ export default defineConfig({
       en: 'Last Updated',
     },
   },
-  title: '齐尹秦',
+  title: 'StarDocs',
   icon: 'https://i.postimg.cc/j5yhCmXp/dog.png',
   logo: {
     light: 'https://i.postimg.cc/j5yhCmXp/dog.png',
@@ -29,7 +29,7 @@ export default defineConfig({
       { defaultLocale: 'zh-CN' }
     ),
     pluginGiscus({
-      repo: 'Pi3-14-15926/Docs',
+      repo: 'Pi3-14-15926/StarDocs',
       repoId: 'R_kgDORnVr5Q',
       category: 'Announcements',
       categoryId: 'DIC_kwDORnVr5c4C4hIa',
@@ -45,7 +45,7 @@ export default defineConfig({
   themeConfig: {
     editLink: {
       docRepoBaseUrl:
-        'https://github.com/Pi3-14-15926/Docs/tree/main/docs/',
+        'https://github.com/Pi3-14-15926/StarDocs/tree/main/docs/',
     },
     editLinkText: '编辑此页',
     lastUpdated: true,

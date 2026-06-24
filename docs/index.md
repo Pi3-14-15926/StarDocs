@@ -1,7 +1,6 @@
 ---
 pageType: home
 title: Rspress
-titleSuffix: '知识库'
 
 hero:
   name: 齐尹秦的知识库
@@ -14,9 +13,6 @@ hero:
     - theme: alt
       text: 我的导航
       link: https://nav.qiyinqin.top/
-    - theme: alt
-      text: 我的应用
-      link: https://app.qiyinqin.top/
   image:
     src: https://i.postimg.cc/pVBQkj82/bigdog.png
     alt: Logo
