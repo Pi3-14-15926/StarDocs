@@ -1,8 +1,8 @@
-import { useState, useCallback } from 'react';
-import { X, FolderPlus, Loader2 } from 'lucide-react';
-import { useDocumentStore } from '@/stores/documentStore';
-import { useConfigStore } from '@/stores/configStore';
+import { FolderPlus, Loader2, X } from 'lucide-react';
+import { useCallback, useState } from 'react';
 import { showAlert } from '@/hooks/useAlert';
+import { useConfigStore } from '@/stores/configStore';
+import { useDocumentStore } from '@/stores/documentStore';
 
 interface NewFolderDialogProps {
   isOpen: boolean;
@@ -10,7 +10,11 @@ interface NewFolderDialogProps {
   onClose: () => void;
 }
 
-export function NewFolderDialog({ isOpen, parentPath, onClose }: NewFolderDialogProps) {
+export function NewFolderDialog({
+  isOpen,
+  parentPath,
+  onClose,
+}: NewFolderDialogProps) {
   const { createDirectory } = useDocumentStore();
   const { github } = useConfigStore();
   const [folderName, setFolderName] = useState('');
@@ -43,21 +47,25 @@ export function NewFolderDialog({ isOpen, parentPath, onClose }: NewFolderDialog
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl dark:bg-gray-800">
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="flex items-center gap-2 text-lg font-semibold">
-            <FolderPlus size={20} className="text-brand" />
-            新建文件夹
-          </h3>
-          <button onClick={onClose} className="btn-ghost p-1">
+    <div className="dialog-overlay">
+      <div className="dialog-content" onClick={(e) => e.stopPropagation()}>
+        <div className="mb-6 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand/10">
+              <FolderPlus size={20} className="text-brand" />
+            </div>
+            <h3 className="text-lg font-bold text-surface-900 dark:text-surface-100">
+              新建文件夹
+            </h3>
+          </div>
+          <button onClick={onClose} className="toolbar-btn">
             <X size={18} />
           </button>
         </div>
 
         <div className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="mb-2 block text-sm font-semibold text-surface-700 dark:text-surface-300">
               文件夹名称
             </label>
             <input
@@ -72,8 +80,8 @@ export function NewFolderDialog({ isOpen, parentPath, onClose }: NewFolderDialog
               autoFocus
             />
             {parentPath && (
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                位置: {parentPath}
+              <p className="mt-2 text-xs text-surface-500 dark:text-surface-400">
+                位置: <span className="font-medium">{parentPath}</span>
               </p>
             )}
           </div>

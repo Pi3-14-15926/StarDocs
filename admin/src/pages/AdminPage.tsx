@@ -9,7 +9,6 @@ import {
   Settings,
   Sun,
   Trash2,
-  Upload,
   X,
 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
@@ -17,7 +16,6 @@ import { useNavigate } from 'react-router-dom';
 import { AIToolbar } from '@/components/AIToolbar';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { DocumentTree } from '@/components/DocumentTree';
-import { FrontmatterEditor } from '@/components/FrontmatterEditor';
 import { ImageUploader } from '@/components/ImageUploader';
 import { MarkdownEditor } from '@/components/MarkdownEditor';
 import { NewDocumentDialog } from '@/components/NewDocumentDialog';
@@ -29,16 +27,9 @@ import { useDocumentStore } from '@/stores/documentStore';
 
 export function AdminPage() {
   const navigate = useNavigate();
-  const {
-    loadTree,
-    currentPath,
-    currentFrontmatter,
-    setCurrentFrontmatter,
-    deleteDocument,
-  } = useDocumentStore();
+  const { loadTree, currentPath, deleteDocument } = useDocumentStore();
   const { github } = useConfigStore();
   const [showSidebar, setShowSidebar] = useState(true);
-  const [showProperties, setShowProperties] = useState(false);
   const [showNewDoc, setShowNewDoc] = useState(false);
   const [showUploadDoc, setShowUploadDoc] = useState(false);
   const [showNewFolder, setShowNewFolder] = useState(false);
@@ -126,11 +117,11 @@ export function AdminPage() {
   const fileName = currentPath?.split('/').pop() ?? '';
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-900">
+    <div className="flex h-screen overflow-hidden bg-surface-50 dark:bg-surface-950">
       {/* Mobile overlay */}
       {isMobile && showSidebar && (
         <div
-          className="fixed inset-0 z-30 bg-black/50"
+          className="fixed inset-0 z-30 bg-surface-900/60 backdrop-blur-sm"
           onClick={() => setShowSidebar(false)}
         />
       )}
@@ -138,21 +129,28 @@ export function AdminPage() {
       {/* Sidebar */}
       <aside
         className={clsx(
-          'fixed z-40 flex h-full w-64 flex-col border-r border-gray-200 bg-white transition-transform dark:border-gray-700 dark:bg-gray-800 md:relative md:translate-x-0',
+          'sidebar fixed z-40 flex h-full w-72 flex-col transition-transform duration-300 ease-out md:relative md:translate-x-0',
           showSidebar ? 'translate-x-0' : '-translate-x-full',
         )}
       >
-        <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 dark:border-gray-700">
-          <div className="flex items-center gap-2">
-            <FileText size={20} className="text-brand" />
-            <span className="font-semibold text-gray-900 dark:text-gray-100">
-              文档管理
-            </span>
+        <div className="flex items-center justify-between px-5 py-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand to-brand-dark shadow-lg shadow-brand/25">
+              <FileText size={18} className="text-white" />
+            </div>
+            <div>
+              <span className="font-bold text-surface-900 dark:text-surface-100">
+                文档管理
+              </span>
+              <p className="text-xs text-surface-500 dark:text-surface-400">
+                {github.owner}/{github.repo}
+              </p>
+            </div>
           </div>
           {isMobile && (
             <button
               onClick={() => setShowSidebar(false)}
-              className="btn-ghost p-1"
+              className="toolbar-btn"
             >
               <X size={18} />
             </button>
@@ -167,31 +165,29 @@ export function AdminPage() {
           />
         </div>
 
-        <div className="border-t border-gray-200 p-3 dark:border-gray-700">
-          <div className="mb-2 text-xs text-gray-400">
-            {github.owner}/{github.repo}
-          </div>
-          <div className="flex items-center gap-2">
+        <div className="border-t border-surface-200/60 p-3 dark:border-surface-700/60">
+          <div className="flex items-center gap-1">
             <button
               onClick={() => setIsDark(!isDark)}
-              className="btn-ghost p-2"
+              className="toolbar-btn"
               title={isDark ? '浅色模式' : '深色模式'}
             >
-              {isDark ? <Sun size={16} /> : <Moon size={16} />}
+              {isDark ? <Sun size={17} /> : <Moon size={17} />}
             </button>
             <button
-              onClick={() => navigate('/admin/ai-config')}
-              className="btn-ghost p-2"
-              title="AI设置"
+              onClick={() => navigate('/admin/settings')}
+              className="toolbar-btn"
+              title="设置"
             >
-              <Settings size={16} />
+              <Settings size={17} />
             </button>
+            <div className="flex-1" />
             <button
               onClick={handleLogout}
-              className="btn-ghost p-2"
+              className="toolbar-btn text-surface-400 hover:text-red-500 dark:text-surface-500 dark:hover:text-red-400"
               title="退出"
             >
-              <LogOut size={16} />
+              <LogOut size={17} />
             </button>
           </div>
         </div>
@@ -201,26 +197,43 @@ export function AdminPage() {
       <main className="flex flex-1 flex-col overflow-hidden">
         {/* PC Top bar */}
         {!isMobile && (
-          <header className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-2 dark:border-gray-700 dark:bg-gray-800">
+          <header className="header flex items-center justify-between px-4 py-2.5">
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowSidebar(!showSidebar)}
-                className="btn-ghost p-1"
+                className="toolbar-btn"
               >
                 <ChevronLeft
                   size={18}
                   className={clsx(
-                    'transition-transform',
+                    'transition-transform duration-200',
                     !showSidebar && 'rotate-180',
                   )}
                 />
               </button>
-              <span className="text-sm text-gray-500">
-                {currentPath?.split('/').join(' / ') ?? '未选择文档'}
-              </span>
+              <div className="flex items-center gap-1.5 text-sm text-surface-500">
+                {currentPath?.split('/').map((part, i, arr) => (
+                  <span key={i} className="flex items-center gap-1.5">
+                    {i > 0 && (
+                      <span className="text-surface-300 dark:text-surface-600">
+                        /
+                      </span>
+                    )}
+                    <span
+                      className={
+                        i === arr.length - 1
+                          ? 'font-medium text-surface-700 dark:text-surface-200'
+                          : ''
+                      }
+                    >
+                      {part}
+                    </span>
+                  </span>
+                )) ?? <span className="text-surface-400">未选择文档</span>}
+              </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
               <AIToolbar
                 selectedText={selectedText}
                 onReplace={(text) => {
@@ -268,19 +281,20 @@ export function AdminPage() {
               />
               {currentPath && (
                 <>
+                  <div className="mx-1 h-5 w-px bg-surface-200 dark:bg-surface-700" />
                   <button
                     onClick={handleCopyPath}
-                    className="btn-ghost p-1.5"
+                    className="toolbar-btn"
                     title="复制路径"
                   >
-                    <Copy size={16} />
+                    <Copy size={15} />
                   </button>
                   <button
                     onClick={handleDelete}
-                    className="btn-ghost p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+                    className="toolbar-btn text-red-400 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20"
                     title="删除文档"
                   >
-                    <Trash2 size={16} />
+                    <Trash2 size={15} />
                   </button>
                 </>
               )}
@@ -290,28 +304,21 @@ export function AdminPage() {
 
         {/* Mobile Top bar */}
         {isMobile && (
-          <header className="border-b border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
-            {/* 第一行：菜单 + 文件名 + 关闭侧边栏 */}
-            <div className="flex items-center justify-between px-3 py-2">
+          <header className="header">
+            <div className="flex items-center justify-between px-3 py-2.5">
               <button
                 onClick={() => setShowSidebar(true)}
-                className="btn-ghost p-1.5"
+                className="toolbar-btn"
               >
                 <Menu size={20} />
               </button>
-              <span className="flex-1 truncate text-center text-sm font-medium text-gray-700 dark:text-gray-200">
-                {fileName || '未选择文档'}
+              <span className="flex-1 truncate text-center text-sm font-semibold text-surface-700 dark:text-surface-200">
+                {fileName || '文档管理'}
               </span>
-              <button
-                onClick={() => setShowProperties(!showProperties)}
-                className="btn-ghost p-1.5"
-              >
-                <Settings size={18} />
-              </button>
+              <div className="w-9" />
             </div>
-            {/* 第二行：操作按钮 */}
             {currentPath && (
-              <div className="flex items-center gap-1 border-t border-gray-100 px-2 py-1.5 dark:border-gray-700">
+              <div className="flex items-center gap-1 border-t border-surface-100 px-2 py-1.5 dark:border-surface-800">
                 <AIToolbar
                   selectedText={selectedText}
                   onReplace={(text) => {
@@ -360,17 +367,17 @@ export function AdminPage() {
                 <div className="flex-1" />
                 <button
                   onClick={handleCopyPath}
-                  className="btn-ghost p-1.5"
+                  className="toolbar-btn"
                   title="复制路径"
                 >
-                  <Copy size={16} />
+                  <Copy size={15} />
                 </button>
                 <button
                   onClick={handleDelete}
-                  className="btn-ghost p-1.5 text-red-500"
+                  className="toolbar-btn text-red-400 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20"
                   title="删除"
                 >
-                  <Trash2 size={16} />
+                  <Trash2 size={15} />
                 </button>
               </div>
             )}
@@ -378,49 +385,11 @@ export function AdminPage() {
         )}
 
         {/* Editor area */}
-        <div className="flex flex-1 overflow-hidden">
+        <div className="flex flex-1 overflow-hidden bg-white dark:bg-surface-900">
           {/* Editor */}
           <div className="flex-1 overflow-hidden">
             <MarkdownEditor />
           </div>
-
-          {/* Properties panel - PC */}
-          {!isMobile && currentPath && (
-            <aside className="w-72 overflow-y-auto border-l border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
-              <h3 className="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
-                文档属性
-              </h3>
-              <FrontmatterEditor
-                frontmatter={currentFrontmatter}
-                onChange={setCurrentFrontmatter}
-              />
-            </aside>
-          )}
-
-          {/* Mobile properties drawer */}
-          {isMobile && showProperties && (
-            <>
-              <div
-                className="fixed inset-0 z-30 bg-black/50"
-                onClick={() => setShowProperties(false)}
-              />
-              <div className="fixed bottom-0 left-0 right-0 z-40 max-h-[70vh] overflow-y-auto rounded-t-2xl bg-white p-4 dark:bg-gray-800">
-                <div className="mb-3 flex items-center justify-between">
-                  <h3 className="text-sm font-semibold">文档属性</h3>
-                  <button
-                    onClick={() => setShowProperties(false)}
-                    className="btn-ghost p-1"
-                  >
-                    <X size={16} />
-                  </button>
-                </div>
-                <FrontmatterEditor
-                  frontmatter={currentFrontmatter}
-                  onChange={setCurrentFrontmatter}
-                />
-              </div>
-            </>
-          )}
         </div>
       </main>
 

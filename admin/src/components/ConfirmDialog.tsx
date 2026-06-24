@@ -42,34 +42,33 @@ export function ConfirmDialog({
   if (!isOpen) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-      onClick={onCancel}
-    >
+    <div className="dialog-overlay" onClick={onCancel}>
       <div
         ref={dialogRef}
-        className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-800"
+        className="dialog-content"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mb-4 flex items-center gap-3">
+        <div className="mb-5 flex items-center gap-4">
           <div
             className={clsx(
-              'flex h-10 w-10 items-center justify-center rounded-full',
+              'flex h-12 w-12 items-center justify-center rounded-2xl',
               danger
                 ? 'bg-red-100 dark:bg-red-900/30'
-                : 'bg-yellow-100 dark:bg-yellow-900/30',
+                : 'bg-amber-100 dark:bg-amber-900/30',
             )}
           >
             <AlertTriangle
-              size={20}
-              className={danger ? 'text-red-500' : 'text-yellow-500'}
+              size={22}
+              className={danger ? 'text-red-500' : 'text-amber-500'}
             />
           </div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-            {title}
-          </h3>
+          <div>
+            <h3 className="text-lg font-bold text-surface-900 dark:text-surface-100">
+              {title}
+            </h3>
+          </div>
         </div>
-        <p className="mb-6 text-sm text-gray-500 dark:text-gray-400">
+        <p className="mb-6 text-sm leading-relaxed text-surface-600 dark:text-surface-400">
           {message}
         </p>
         <div className="flex justify-end gap-3">

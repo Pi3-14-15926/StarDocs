@@ -1,16 +1,16 @@
-import { useState, useCallback } from 'react';
-import {
-  X,
-  FolderInput,
-  ChevronRight,
-  ChevronDown,
-  Folder,
-  Loader2,
-} from 'lucide-react';
-import { useDocumentStore } from '@/stores/documentStore';
-import { useConfigStore } from '@/stores/configStore';
-import { showAlert } from '@/hooks/useAlert';
 import clsx from 'clsx';
+import {
+  ChevronDown,
+  ChevronRight,
+  Folder,
+  FolderInput,
+  Loader2,
+  X,
+} from 'lucide-react';
+import { useCallback, useState } from 'react';
+import { showAlert } from '@/hooks/useAlert';
+import { useConfigStore } from '@/stores/configStore';
+import { useDocumentStore } from '@/stores/documentStore';
 
 interface MoveDialogProps {
   isOpen: boolean;
@@ -50,18 +50,18 @@ function FolderNode({
       <div
         onClick={handleClick}
         className={clsx(
-          'flex cursor-pointer items-center gap-1 rounded-md px-2 py-1.5 text-sm transition-colors',
+          'flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-sm transition-all duration-150',
           isSelected
             ? 'bg-brand/10 text-brand font-medium'
-            : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800',
+            : 'text-surface-700 hover:bg-surface-100 dark:text-surface-300 dark:hover:bg-surface-800',
         )}
-        style={{ paddingLeft: `${level * 16 + 8}px` }}
+        style={{ paddingLeft: `${level * 16 + 12}px` }}
       >
         {node.children && node.children.length > 0 ? (
           isExpanded ? (
-            <ChevronDown size={14} className="text-gray-400" />
+            <ChevronDown size={14} className="text-surface-400" />
           ) : (
-            <ChevronRight size={14} className="text-gray-400" />
+            <ChevronRight size={14} className="text-surface-400" />
           )
         ) : (
           <span className="w-3.5" />
@@ -70,7 +70,7 @@ function FolderNode({
         <span className="truncate flex-1">{node.name}</span>
       </div>
       {isExpanded && node.children && (
-        <div>
+        <div className="animate-fade-in">
           {node.children
             .filter((child) => child.name !== '.git')
             .sort((a, b) => a.name.localeCompare(b.name))
@@ -131,7 +131,7 @@ export function MoveDialog({
   sourceType,
   onClose,
 }: MoveDialogProps) {
-  const { tree, moveDocument, loadTree } = useDocumentStore();
+  const { tree, moveDocument } = useDocumentStore();
   const { github } = useConfigStore();
   const [selectedFolder, setSelectedFolder] = useState<string>('');
   const [isMoving, setIsMoving] = useState(false);
@@ -180,42 +180,58 @@ export function MoveDialog({
     } finally {
       setIsMoving(false);
     }
-  }, [selectedFolder, sourcePath, sourceName, moveDocument, onClose, isSourceChild]);
+  }, [
+    selectedFolder,
+    sourcePath,
+    sourceName,
+    moveDocument,
+    onClose,
+    isSourceChild,
+  ]);
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl dark:bg-gray-800">
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="flex items-center gap-2 text-lg font-semibold">
-            <FolderInput size={20} className="text-brand" />
-            移动到
-          </h3>
-          <button onClick={onClose} className="btn-ghost p-1">
+    <div className="dialog-overlay">
+      <div className="dialog-content" onClick={(e) => e.stopPropagation()}>
+        <div className="mb-6 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand/10">
+              <FolderInput size={20} className="text-brand" />
+            </div>
+            <h3 className="text-lg font-bold text-surface-900 dark:text-surface-100">
+              移动到
+            </h3>
+          </div>
+          <button onClick={onClose} className="toolbar-btn">
             <X size={18} />
           </button>
         </div>
 
-        <div className="mb-4 rounded-lg bg-gray-50 p-3 dark:bg-gray-700/50">
-          <p className="text-xs text-gray-500 dark:text-gray-400">
-            移动: {sourceName}
+        <div className="mb-4 rounded-xl bg-surface-50 p-3 dark:bg-surface-800/50">
+          <p className="text-xs text-surface-500 dark:text-surface-400">
+            移动:{' '}
+            <span className="font-medium text-surface-700 dark:text-surface-300">
+              {sourceName}
+            </span>
           </p>
         </div>
 
-        <div className="mb-4 max-h-64 overflow-y-auto rounded-lg border border-gray-200 p-2 dark:border-gray-700">
+        <div className="mb-4 max-h-64 overflow-y-auto rounded-xl border border-surface-200 p-2 dark:border-surface-700">
           <div
             onClick={() => setSelectedFolder(docsDir)}
             className={clsx(
-              'flex cursor-pointer items-center gap-1 rounded-md px-2 py-1.5 text-sm transition-colors',
+              'flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-sm transition-all duration-150',
               selectedFolder === docsDir
                 ? 'bg-brand/10 text-brand font-medium'
-                : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800',
+                : 'text-surface-700 hover:bg-surface-100 dark:text-surface-300 dark:hover:bg-surface-800',
             )}
           >
             <span className="w-3.5" />
             <Folder size={16} className="text-brand" />
-            <span className="truncate flex-1">{docsDir} (根目录)</span>
+            <span className="truncate flex-1 font-medium">
+              {docsDir} (根目录)
+            </span>
           </div>
           {folderTree.map((node) => (
             <FolderNode

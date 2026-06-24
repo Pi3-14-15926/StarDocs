@@ -4,9 +4,9 @@ import {
   ChevronRight,
   FileText,
   Folder,
+  FolderInput,
   FolderOpen,
   FolderPlus,
-  FolderInput,
   Loader2,
   MoreVertical,
   Pencil,
@@ -17,12 +17,12 @@ import {
 } from 'lucide-react';
 import type React from 'react';
 import { useCallback, useRef, useState } from 'react';
-import { useDocumentStore } from '@/stores/documentStore';
+import { showAlert } from '@/hooks/useAlert';
 import { useConfigStore } from '@/stores/configStore';
+import { useDocumentStore } from '@/stores/documentStore';
 import type { DocumentNode } from '@/types';
 import { ConfirmDialog } from './ConfirmDialog';
 import { MoveDialog } from './MoveDialog';
-import { showAlert } from '@/hooks/useAlert';
 
 interface TreeNodeProps {
   node: DocumentNode;
@@ -73,12 +73,15 @@ function TreeNodeComponent({ node, level = 0, onNewFolder }: TreeNodeProps) {
     await deleteDocument(node.path);
   }, [node.path, deleteDocument]);
 
-  const handleRename = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    setNewName(node.name);
-    setIsRenaming(true);
-    setShowMenu(false);
-  }, [node.name]);
+  const handleRename = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setNewName(node.name);
+      setIsRenaming(true);
+      setShowMenu(false);
+    },
+    [node.name],
+  );
 
   const confirmRename = useCallback(async () => {
     if (!newName.trim() || newName === node.name) {
@@ -134,14 +137,20 @@ function TreeNodeComponent({ node, level = 0, onNewFolder }: TreeNodeProps) {
       <Folder size={16} className="text-brand" />
     )
   ) : (
-    <FileText size={16} className="text-gray-400" />
+    <FileText size={16} className="text-surface-400" />
   );
 
   const chevron = isDir ? (
     isLoadingChildren ? null : isExpanded ? (
-      <ChevronDown size={14} className="text-gray-400" />
+      <ChevronDown
+        size={14}
+        className="text-surface-400 transition-transform duration-200"
+      />
     ) : (
-      <ChevronRight size={14} className="text-gray-400" />
+      <ChevronRight
+        size={14}
+        className="text-surface-400 transition-transform duration-200"
+      />
     )
   ) : null;
 
@@ -150,17 +159,20 @@ function TreeNodeComponent({ node, level = 0, onNewFolder }: TreeNodeProps) {
       <div
         onClick={handleClick}
         className={clsx(
-          'group flex cursor-pointer items-center gap-1 rounded-md px-2 py-1.5 text-sm transition-colors',
+          'group flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-sm transition-all duration-150',
           isActive
-            ? 'bg-brand/10 text-brand font-medium'
-            : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800',
+            ? 'bg-brand/10 text-brand font-medium shadow-sm'
+            : 'text-surface-700 hover:bg-surface-100 dark:text-surface-300 dark:hover:bg-surface-800',
         )}
-        style={{ paddingLeft: `${level * 16 + 8}px` }}
+        style={{ paddingLeft: `${level * 16 + 12}px` }}
       >
         {chevron}
         {icon}
         {isRenaming ? (
-          <div className="flex flex-1 items-center gap-1" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="flex flex-1 items-center gap-1"
+            onClick={(e) => e.stopPropagation()}
+          >
             <input
               type="text"
               value={newName}
@@ -170,7 +182,7 @@ function TreeNodeComponent({ node, level = 0, onNewFolder }: TreeNodeProps) {
                 if (e.key === 'Escape') setIsRenaming(false);
               }}
               onBlur={confirmRename}
-              className="input-field py-0.5 text-xs"
+              className="input-field py-1 px-2 text-xs"
               autoFocus
             />
           </div>
@@ -181,51 +193,42 @@ function TreeNodeComponent({ node, level = 0, onNewFolder }: TreeNodeProps) {
           <div className="relative" ref={menuRef}>
             <button
               onClick={handleMenuToggle}
-              className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-gray-600 transition-opacity p-0.5"
+              className="opacity-0 group-hover:opacity-100 text-surface-400 hover:text-surface-600 transition-all duration-150 p-1.5 rounded-lg hover:bg-surface-200 dark:hover:bg-surface-700"
             >
               <MoreVertical size={14} />
             </button>
             {showMenu && (
-              <div className="absolute right-0 top-full z-50 mt-1 w-40 rounded-lg border border-gray-200 bg-white py-1 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+              <div className="dropdown-menu">
                 {isDir && (
                   <>
                     <button
                       onClick={handleNewSubfolder}
-                      className="flex w-full items-center gap-2 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                      className="dropdown-item"
                     >
-                      <FolderPlus size={14} />
+                      <FolderPlus size={15} />
                       新建子文件夹
                     </button>
-                    <button
-                      onClick={handleRename}
-                      className="flex w-full items-center gap-2 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
-                    >
-                      <Pencil size={14} />
+                    <button onClick={handleRename} className="dropdown-item">
+                      <Pencil size={15} />
                       重命名
                     </button>
-                    <button
-                      onClick={handleMove}
-                      className="flex w-full items-center gap-2 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
-                    >
-                      <FolderInput size={14} />
+                    <button onClick={handleMove} className="dropdown-item">
+                      <FolderInput size={15} />
                       移动
                     </button>
-                    <div className="my-1 border-t border-gray-200 dark:border-gray-700" />
+                    <div className="dropdown-divider" />
                     <button
                       onClick={handleDelete}
-                      className="flex w-full items-center gap-2 px-3 py-1.5 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+                      className="dropdown-item danger"
                     >
-                      <Trash2 size={14} />
+                      <Trash2 size={15} />
                       删除
                     </button>
                   </>
                 )}
                 {!isDir && (
-                  <button
-                    onClick={handleMove}
-                    className="flex w-full items-center gap-2 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
-                  >
-                    <FolderInput size={14} />
+                  <button onClick={handleMove} className="dropdown-item">
+                    <FolderInput size={15} />
                     移动
                   </button>
                 )}
@@ -235,7 +238,7 @@ function TreeNodeComponent({ node, level = 0, onNewFolder }: TreeNodeProps) {
         )}
       </div>
       {isDir && isExpanded && node.children && (
-        <div>
+        <div className="animate-fade-in">
           {node.children
             .sort((a, b) => {
               if (a.type === b.type) return a.name.localeCompare(b.name);
@@ -309,66 +312,68 @@ export function DocumentTree({
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center gap-2 border-b border-gray-200 p-3 dark:border-gray-700">
+      <div className="flex items-center gap-2 border-b border-surface-200/60 p-3 dark:border-surface-700/60">
         <div className="relative flex-1">
           <Search
-            size={14}
-            className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400"
+            size={15}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-400"
           />
           <input
             type="text"
             placeholder="搜索文档..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="input-field pl-8 py-1.5 text-xs"
+            className="input-field pl-9 py-2 text-sm"
           />
         </div>
         <button
           onClick={onNewDocument}
-          className="btn-primary px-2 py-1.5"
+          className="toolbar-btn"
           title="新建文档"
         >
-          <Plus size={14} />
+          <Plus size={16} />
         </button>
         <button
           onClick={() => onNewFolder && onNewFolder('')}
-          className="btn-primary px-2 py-1.5"
+          className="toolbar-btn"
           title="新建文件夹"
         >
-          <FolderPlus size={14} />
+          <FolderPlus size={16} />
         </button>
         <button
           onClick={onUploadDocument}
-          className="btn-primary px-2 py-1.5"
+          className="toolbar-btn"
           title="上传文档"
         >
-          <Upload size={14} />
+          <Upload size={16} />
         </button>
       </div>
 
       <div className="flex-1 overflow-y-auto p-2">
         {isLoading ? (
-          <div className="flex items-center justify-center gap-2 py-8 text-sm text-gray-500">
-            <Loader2 size={16} className="animate-spin" />
+          <div className="flex items-center justify-center gap-2 py-8 text-sm text-surface-500">
+            <Loader2 size={18} className="animate-spin text-brand" />
             加载中...
           </div>
         ) : displayTree.length === 0 ? (
-          <div className="py-8 text-center text-sm text-gray-500">
+          <div className="py-8 text-center text-sm text-surface-500">
             {searchQuery ? '未找到匹配的文档' : '暂无文档'}
           </div>
         ) : (
-          displayTree
-            .sort((a, b) => {
-              if (a.type === b.type) return a.name.localeCompare(b.name);
-              return a.type === 'directory' ? -1 : 1;
-            })
-            .map((node) => (
-              <TreeNodeComponent
-                key={node.path}
-                node={node}
-                onNewFolder={onNewFolder}
-              />
-            ))
+          <div className="space-y-0.5">
+            {displayTree
+              .sort((a, b) => {
+                if (a.type === b.type) return a.name.localeCompare(b.name);
+                return a.type === 'directory' ? -1 : 1;
+              })
+              .map((node) => (
+                <TreeNodeComponent
+                  key={node.path}
+                  node={node}
+                  onNewFolder={onNewFolder}
+                />
+              ))}
+          </div>
         )}
       </div>
     </div>

@@ -1,4 +1,4 @@
-import { FolderPlus, X } from 'lucide-react';
+import { FilePlus, X } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { showAlert } from '@/hooks/useAlert';
 import { useConfigStore } from '@/stores/configStore';
@@ -68,34 +68,30 @@ export function NewDocumentDialog({ isOpen, onClose }: NewDocumentDialogProps) {
     } finally {
       setIsCreating(false);
     }
-  }, [
-    name,
-    category,
-    title,
-    description,
-    docsDir,
-    createDocument,
-    onClose,
-  ]);
+  }, [name, category, title, description, docsDir, createDocument, onClose]);
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl dark:bg-gray-800">
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="flex items-center gap-2 text-lg font-semibold">
-            <FolderPlus size={20} className="text-brand" />
-            新建文档
-          </h3>
-          <button onClick={onClose} className="btn-ghost p-1">
+    <div className="dialog-overlay">
+      <div className="dialog-content" onClick={(e) => e.stopPropagation()}>
+        <div className="mb-6 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand/10">
+              <FilePlus size={20} className="text-brand" />
+            </div>
+            <h3 className="text-lg font-bold text-surface-900 dark:text-surface-100">
+              新建文档
+            </h3>
+          </div>
+          <button onClick={onClose} className="toolbar-btn">
             <X size={18} />
           </button>
         </div>
 
         <div className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="mb-2 block text-sm font-semibold text-surface-700 dark:text-surface-300">
               文件名 *
             </label>
             <input
@@ -109,7 +105,7 @@ export function NewDocumentDialog({ isOpen, onClose }: NewDocumentDialogProps) {
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="mb-2 block text-sm font-semibold text-surface-700 dark:text-surface-300">
               分类目录
             </label>
             <select
@@ -127,7 +123,7 @@ export function NewDocumentDialog({ isOpen, onClose }: NewDocumentDialogProps) {
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="mb-2 block text-sm font-semibold text-surface-700 dark:text-surface-300">
               标题
             </label>
             <input
@@ -140,13 +136,13 @@ export function NewDocumentDialog({ isOpen, onClose }: NewDocumentDialogProps) {
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="mb-2 block text-sm font-semibold text-surface-700 dark:text-surface-300">
               描述
             </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="input-field min-h-[60px] resize-y"
+              className="input-field min-h-[80px] resize-y"
               placeholder="文档描述（可选）"
             />
           </div>

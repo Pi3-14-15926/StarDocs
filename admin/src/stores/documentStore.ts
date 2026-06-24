@@ -247,9 +247,7 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
     const { github } = useConfigStore.getState();
     if (!githubService) return;
 
-    const gitkeepPath = path.endsWith('/.gitkeep')
-      ? path
-      : `${path}/.gitkeep`;
+    const gitkeepPath = path.endsWith('/.gitkeep') ? path : `${path}/.gitkeep`;
     await githubService.createOrUpdateFile(
       github.owner,
       github.repo,

@@ -6,84 +6,151 @@ import {
   Eye,
   Heading1,
   Heading2,
+  Heading3,
   Image,
   Italic,
   Link,
   List,
   Pencil,
+  Quote,
+  Redo,
   Save,
+  Strikethrough,
+  Undo,
 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { showAlert } from '@/hooks/useAlert';
 import { useDocumentStore } from '@/stores/documentStore';
 
-interface EditorToolbarProps {
-  onInsert: (before: string, after?: string) => void;
+interface HistoryState {
+  content: string;
+  timestamp: number;
 }
 
-function EditorToolbar({ onInsert }: EditorToolbarProps) {
+interface EditorToolbarProps {
+  onInsert: (before: string, after?: string) => void;
+  onUndo?: () => void;
+  onRedo?: () => void;
+  canUndo?: boolean;
+  canRedo?: boolean;
+}
+
+function EditorToolbar({
+  onInsert,
+  onUndo,
+  onRedo,
+  canUndo,
+  canRedo,
+}: EditorToolbarProps) {
   return (
-    <div className="flex items-center gap-1 border-b border-gray-200 px-3 py-1.5 dark:border-gray-700">
+    <div className="flex flex-wrap items-center gap-0.5 border-b border-surface-200/60 px-3 py-2 dark:border-surface-700/60">
+      <button
+        onClick={onUndo}
+        disabled={!canUndo}
+        className={clsx(
+          'toolbar-btn',
+          !canUndo && 'opacity-40 cursor-not-allowed',
+        )}
+        title="撤销 (Ctrl+Z)"
+      >
+        <Undo size={15} />
+      </button>
+      <button
+        onClick={onRedo}
+        disabled={!canRedo}
+        className={clsx(
+          'toolbar-btn',
+          !canRedo && 'opacity-40 cursor-not-allowed',
+        )}
+        title="重做 (Ctrl+Y)"
+      >
+        <Redo size={15} />
+      </button>
+      <div className="mx-1.5 h-4 w-px bg-surface-200 dark:bg-surface-700" />
       <button
         onClick={() => onInsert('**', '**')}
-        className="btn-ghost px-2 py-1"
+        className="toolbar-btn"
         title="粗体"
       >
-        <Bold size={16} />
+        <Bold size={15} />
       </button>
       <button
         onClick={() => onInsert('*', '*')}
-        className="btn-ghost px-2 py-1"
+        className="toolbar-btn"
         title="斜体"
       >
-        <Italic size={16} />
+        <Italic size={15} />
+      </button>
+      <button
+        onClick={() => onInsert('~~', '~~')}
+        className="toolbar-btn"
+        title="删除线"
+      >
+        <Strikethrough size={15} />
       </button>
       <button
         onClick={() => onInsert('`', '`')}
-        className="btn-ghost px-2 py-1"
+        className="toolbar-btn"
         title="代码"
       >
-        <Code size={16} />
+        <Code size={15} />
+      </button>
+      <div className="mx-1.5 h-4 w-px bg-surface-200 dark:bg-surface-700" />
+      <button
+        onClick={() => onInsert('> ')}
+        className="toolbar-btn"
+        title="引用"
+      >
+        <Quote size={15} />
       </button>
       <button
         onClick={() => onInsert('[', '](url)')}
-        className="btn-ghost px-2 py-1"
+        className="toolbar-btn"
         title="链接"
       >
-        <Link size={16} />
+        <Link size={15} />
       </button>
       <button
         onClick={() => onInsert('![alt](', ')')}
-        className="btn-ghost px-2 py-1"
+        className="toolbar-btn"
         title="图片"
       >
-        <Image size={16} />
+        <Image size={15} />
       </button>
-      <div className="mx-1 h-4 w-px bg-gray-200 dark:bg-gray-700" />
+      <div className="mx-1.5 h-4 w-px bg-surface-200 dark:bg-surface-700" />
       <button
         onClick={() => onInsert('# ')}
-        className="btn-ghost px-2 py-1"
+        className="toolbar-btn"
         title="一级标题"
       >
-        <Heading1 size={16} />
+        <Heading1 size={15} />
       </button>
       <button
         onClick={() => onInsert('## ')}
-        className="btn-ghost px-2 py-1"
+        className="toolbar-btn"
         title="二级标题"
       >
-        <Heading2 size={16} />
+        <Heading2 size={15} />
+      </button>
+      <button
+        onClick={() => onInsert('### ')}
+        className="toolbar-btn"
+        title="三级标题"
+      >
+        <Heading3 size={15} />
       </button>
       <button
         onClick={() => onInsert('- ')}
-        className="btn-ghost px-2 py-1"
+        className="toolbar-btn"
         title="列表"
       >
-        <List size={16} />
+        <List size={15} />
       </button>
     </div>
   );
 }
+
+const MAX_HISTORY = 100;
 
 export function MarkdownEditor() {
   const {
@@ -94,7 +161,6 @@ export function MarkdownEditor() {
     isSaving,
     lastSaved,
     renameDocument,
-    isLoading,
   } = useDocumentStore();
   const [isPreview, setIsPreview] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -102,6 +168,9 @@ export function MarkdownEditor() {
   const [localContent, setLocalContent] = useState('');
   const [isRenaming, setIsRenaming] = useState(false);
   const [newName, setNewName] = useState('');
+  const [history, setHistory] = useState<HistoryState[]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+  const isUndoRedoRef = useRef(false);
 
   const displayContent = isEditing ? localContent : currentContent;
 
@@ -110,7 +179,48 @@ export function MarkdownEditor() {
     setLocalContent('');
     setIsPreview(false);
     setIsRenaming(false);
+    setHistory([]);
+    setHistoryIndex(-1);
   }, [currentPath]);
+
+  useEffect(() => {
+    if (isEditing && !isUndoRedoRef.current) {
+      const now = Date.now();
+      const newHistory = history.slice(0, historyIndex + 1);
+      newHistory.push({ content: displayContent, timestamp: now });
+      if (newHistory.length > MAX_HISTORY) {
+        newHistory.shift();
+      }
+      setHistory(newHistory);
+      setHistoryIndex(newHistory.length - 1);
+    }
+    isUndoRedoRef.current = false;
+  }, [displayContent, isEditing]);
+
+  const handleUndo = useCallback(() => {
+    if (historyIndex > 0) {
+      isUndoRedoRef.current = true;
+      const newIndex = historyIndex - 1;
+      setHistoryIndex(newIndex);
+      setLocalContent(history[newIndex].content);
+      setIsEditing(true);
+      setTimeout(() => textareaRef.current?.focus(), 0);
+    }
+  }, [history, historyIndex]);
+
+  const handleRedo = useCallback(() => {
+    if (historyIndex < history.length - 1) {
+      isUndoRedoRef.current = true;
+      const newIndex = historyIndex + 1;
+      setHistoryIndex(newIndex);
+      setLocalContent(history[newIndex].content);
+      setIsEditing(true);
+      setTimeout(() => textareaRef.current?.focus(), 0);
+    }
+  }, [history, historyIndex]);
+
+  const canUndo = historyIndex > 0;
+  const canRedo = historyIndex < history.length - 1;
 
   const handleSave = useCallback(async () => {
     setCurrentContent(displayContent);
@@ -174,25 +284,39 @@ export function MarkdownEditor() {
         e.preventDefault();
         handleSave();
       }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        handleUndo();
+      }
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        (e.key === 'y' || (e.key === 'z' && e.shiftKey))
+      ) {
+        e.preventDefault();
+        handleRedo();
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleSave]);
+  }, [handleSave, handleUndo, handleRedo]);
 
   if (!currentPath) {
     return (
-      <div className="flex h-full items-center justify-center text-gray-400">
-        选择或创建一个文档开始编辑
+      <div className="flex h-full flex-col items-center justify-center text-surface-400">
+        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-surface-100 dark:bg-surface-800">
+          <Edit3 size={24} className="text-surface-400" />
+        </div>
+        <p className="mt-4 text-sm font-medium">选择或创建一个文档开始编辑</p>
       </div>
     );
   }
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center justify-between border-b border-gray-200 px-3 py-2 dark:border-gray-700">
+      <div className="flex items-center justify-between border-b border-surface-200/60 px-4 py-2.5 dark:border-surface-700/60">
         <div className="flex items-center gap-2">
           {isRenaming ? (
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-2">
               <input
                 type="text"
                 value={newName}
@@ -201,26 +325,26 @@ export function MarkdownEditor() {
                   if (e.key === 'Enter') handleRename();
                   if (e.key === 'Escape') setIsRenaming(false);
                 }}
-                className="input-field w-48 py-1 text-sm"
+                className="input-field w-48 py-1.5 text-sm"
                 autoFocus
                 placeholder="新文件名"
               />
               <button
                 onClick={handleRename}
-                className="btn-primary px-2 py-1 text-xs"
+                className="btn-primary px-3 py-1.5 text-xs"
               >
                 确认
               </button>
               <button
                 onClick={() => setIsRenaming(false)}
-                className="btn-ghost px-2 py-1 text-xs"
+                className="btn-secondary px-3 py-1.5 text-xs"
               >
                 取消
               </button>
             </div>
           ) : (
             <>
-              <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
+              <span className="text-sm font-semibold text-surface-700 dark:text-surface-200">
                 {currentPath.split('/').pop()}
               </span>
               <button
@@ -228,47 +352,55 @@ export function MarkdownEditor() {
                   setNewName(currentPath.split('/').pop() || '');
                   setIsRenaming(true);
                 }}
-                className="text-gray-400 hover:text-brand transition-colors"
+                className="text-surface-400 hover:text-brand transition-colors duration-150"
                 title="重命名"
               >
-                <Pencil size={14} />
+                <Pencil size={13} />
               </button>
             </>
           )}
           {lastSaved && (
-            <span className="text-xs text-gray-400">
+            <span className="text-xs text-surface-400">
               已保存 {new Date(lastSaved).toLocaleTimeString()}
             </span>
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <button
             onClick={() => setIsPreview(!isPreview)}
             className={clsx(
-              'btn-ghost text-xs',
-              isPreview && 'bg-gray-100 dark:bg-gray-800',
+              'toolbar-btn',
+              isPreview && 'bg-surface-100 dark:bg-surface-800',
             )}
           >
             {isPreview ? <Edit3 size={14} /> : <Eye size={14} />}
-            {isPreview ? '编辑' : '预览'}
+            <span className="text-xs font-medium">
+              {isPreview ? '编辑' : '预览'}
+            </span>
           </button>
           <button
             onClick={handleSave}
             disabled={isSaving}
-            className="btn-primary text-xs"
+            className="btn-primary px-3 py-1.5 text-xs"
           >
-            <Save size={14} />
+            <Save size={13} />
             {isSaving ? '保存中...' : '保存'}
           </button>
         </div>
       </div>
 
-      <EditorToolbar onInsert={handleInsert} />
+      <EditorToolbar
+        onInsert={handleInsert}
+        onUndo={handleUndo}
+        onRedo={handleRedo}
+        canUndo={canUndo}
+        canRedo={canRedo}
+      />
 
       <div className="flex-1 overflow-auto">
         {isPreview ? (
           <div
-            className="h-full overflow-y-auto p-4 dark:text-gray-200"
+            className="h-full overflow-y-auto p-6 dark:text-surface-200"
             dangerouslySetInnerHTML={{ __html: renderMarkdown(displayContent) }}
           />
         ) : (
@@ -279,7 +411,7 @@ export function MarkdownEditor() {
               setIsEditing(true);
               setLocalContent(e.target.value);
             }}
-            className="h-full w-full resize-none border-none bg-transparent p-4 font-mono text-sm focus:outline-none"
+            className="h-full w-full resize-none border-none bg-transparent p-6 font-mono text-sm leading-relaxed focus:outline-none dark:text-surface-200"
             placeholder="开始编写 Markdown..."
             spellCheck={false}
           />
@@ -293,43 +425,51 @@ function renderMarkdown(md: string): string {
   let html = md
     .replace(
       /^### (.+)$/gm,
-      '<h3 style="font-size:1.17em;font-weight:bold;margin:16px 0 8px;color:inherit">$1</h3>',
+      '<h3 style="font-size:1.17em;font-weight:bold;margin:20px 0 10px;color:inherit">$1</h3>',
     )
     .replace(
       /^## (.+)$/gm,
-      '<h2 style="font-size:1.5em;font-weight:bold;margin:20px 0 10px;color:inherit">$1</h2>',
+      '<h2 style="font-size:1.5em;font-weight:bold;margin:24px 0 12px;color:inherit">$1</h2>',
     )
     .replace(
       /^# (.+)$/gm,
-      '<h1 style="font-size:2em;font-weight:bold;margin:24px 0 12px;color:inherit">$1</h1>',
+      '<h1 style="font-size:2em;font-weight:bold;margin:28px 0 16px;color:inherit">$1</h1>',
     )
     .replace(/\*\*(.+?)\*\*/g, '<strong style="font-weight:600">$1</strong>')
     .replace(/\*(.+?)\*/g, '<em style="font-style:italic">$1</em>')
     .replace(
+      /~~(.+?)~~/g,
+      '<del style="text-decoration:line-through;color:#64748B">$1</del>',
+    )
+    .replace(
       /`(.+?)`/g,
-      '<code style="background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:0.9em;color:#e11d48">$1</code>',
+      '<code style="background:rgba(99,102,241,0.1);padding:2px 8px;border-radius:6px;font-size:0.9em;color:#6366F1">$1</code>',
+    )
+    .replace(
+      /^> (.+)$/gm,
+      '<blockquote style="border-left:4px solid #6366F1;padding-left:16px;margin:12px 0;color:#64748B;font-style:italic">$1</blockquote>',
     )
     .replace(
       /!\[([^\]]*)\]\(([^)]+)\)/g,
-      '<img src="$2" alt="$1" style="max-width:100%;border-radius:8px;margin:8px 0" />',
+      '<img src="$2" alt="$1" style="max-width:100%;border-radius:12px;margin:12px 0" />',
     )
     .replace(
       /\[(.+?)\]\((.+?)\)/g,
-      '<a href="$2" target="_blank" rel="noopener" style="color:#3b82f6;text-decoration:underline">$1</a>',
+      '<a href="$2" target="_blank" rel="noopener" style="color:#6366F1;text-decoration:underline;text-underline-offset:2px">$1</a>',
     )
-    .replace(/^- (.+)$/gm, '<li style="margin:4px 0;margin-left:20px">$1</li>')
+    .replace(/^- (.+)$/gm, '<li style="margin:6px 0;margin-left:24px">$1</li>')
     .replace(
       /(<li.*>.*<\/li>\n?)+/g,
-      '<ul style="list-style:disc;padding-left:20px;margin:8px 0">$&</ul>',
+      '<ul style="list-style:disc;padding-left:24px;margin:12px 0">$&</ul>',
     )
     .replace(
       /^(\d+)\. (.+)$/gm,
-      '<li style="margin:4px 0;margin-left:20px;list-style:decimal">$2</li>',
+      '<li style="margin:6px 0;margin-left:24px;list-style:decimal">$2</li>',
     )
-    .replace(/\n\n/g, '</p><p style="margin:12px 0;line-height:1.7">')
+    .replace(/\n\n/g, '</p><p style="margin:14px 0;line-height:1.8">')
     .replace(/\n/g, '<br/>');
 
   if (!html.startsWith('<'))
-    html = `<p style="margin:12px 0;line-height:1.7">${html}</p>`;
+    html = `<p style="margin:14px 0;line-height:1.8">${html}</p>`;
   return html;
 }

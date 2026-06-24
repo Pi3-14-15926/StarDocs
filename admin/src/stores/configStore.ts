@@ -1,10 +1,12 @@
 import { create } from 'zustand';
 import { AIService } from '@/services/AIService';
 import { GitHubService } from '@/services/GitHubService';
-import type { AIConfig, GitHubConfig } from '@/types';
+import { ImageService } from '@/services/ImageService';
+import type { AccelerationConfig, AIConfig, GitHubConfig } from '@/types';
 
 const CONFIG_KEY = 'rspress-admin-config';
 const AI_CONFIG_KEY = 'rspress-admin-ai-config';
+const ACCEL_CONFIG_KEY = 'rspress-admin-accel-config';
 
 function loadConfig(): GitHubConfig {
   try {
@@ -35,15 +37,29 @@ function loadAIConfig(): AIConfig {
   };
 }
 
+function loadAccelConfig(): AccelerationConfig {
+  try {
+    const saved = localStorage.getItem(ACCEL_CONFIG_KEY);
+    if (saved) return JSON.parse(saved);
+  } catch {}
+  return {
+    iconCdnMode: 'jsdelivr',
+    iconCdnCustomBase: '',
+  };
+}
+
 interface ConfigState {
   github: GitHubConfig;
   ai: AIConfig;
+  accel: AccelerationConfig;
   isConnected: boolean;
   githubService: GitHubService | null;
   aiService: AIService | null;
+  imageService: ImageService | null;
 
   setGitHubConfig: (config: GitHubConfig) => void;
   setAIConfig: (config: AIConfig) => void;
+  setAccelConfig: (config: AccelerationConfig) => void;
   testConnection: () => Promise<boolean>;
   initServices: () => void;
 }
@@ -51,9 +67,11 @@ interface ConfigState {
 export const useConfigStore = create<ConfigState>((set, get) => ({
   github: loadConfig(),
   ai: loadAIConfig(),
+  accel: loadAccelConfig(),
   isConnected: false,
   githubService: null,
   aiService: null,
+  imageService: null,
 
   setGitHubConfig: (config) => {
     localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
@@ -67,6 +85,11 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
     get().initServices();
   },
 
+  setAccelConfig: (config) => {
+    localStorage.setItem(ACCEL_CONFIG_KEY, JSON.stringify(config));
+    set({ accel: config });
+  },
+
   testConnection: async () => {
     const { github } = get();
     const service = new GitHubService(github);
@@ -78,7 +101,10 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
   initServices: () => {
     const { github, ai } = get();
     if (github.token && github.owner && github.repo) {
-      set({ githubService: new GitHubService(github) });
+      set({
+        githubService: new GitHubService(github),
+        imageService: new ImageService(github),
+      });
     }
     if (ai.apiKey) {
       set({ aiService: new AIService(ai) });

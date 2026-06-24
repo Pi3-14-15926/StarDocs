@@ -170,13 +170,19 @@ export function AIToolbar({
         onMouseDown={(e) => e.preventDefault()}
         onClick={() => setIsOpen(!isOpen)}
         disabled={isProcessing}
-        className={clsx('btn-primary text-xs', isProcessing && 'animate-pulse')}
+        className={clsx(
+          'btn-primary px-3 py-1.5 text-xs',
+          isProcessing && 'animate-pulse',
+        )}
       >
-        <Sparkles size={14} />
+        <Sparkles size={13} />
         AI
         <ChevronDown
-          size={12}
-          className={clsx('transition-transform', isOpen && 'rotate-180')}
+          size={11}
+          className={clsx(
+            'transition-transform duration-200',
+            isOpen && 'rotate-180',
+          )}
         />
       </button>
 
@@ -186,26 +192,26 @@ export function AIToolbar({
             className="fixed inset-0 z-40"
             onClick={() => setIsOpen(false)}
           />
-          <div className="fixed inset-x-0 bottom-0 z-50 rounded-t-2xl bg-white shadow-2xl dark:bg-gray-800 sm:absolute sm:inset-auto sm:right-0 sm:top-full sm:mt-1 sm:w-56 sm:rounded-xl">
-            <div className="border-b border-gray-100 px-4 py-3 dark:border-gray-700 sm:hidden">
-              <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+          <div className="dropdown-menu fixed inset-x-0 bottom-0 z-50 max-h-[70vh] rounded-t-3xl sm:absolute sm:inset-auto sm:right-0 sm:top-full sm:mt-2 sm:w-64 sm:rounded-2xl">
+            <div className="border-b border-surface-100 px-4 py-3 dark:border-surface-700 sm:hidden">
+              <span className="text-sm font-bold text-surface-500 dark:text-surface-400">
                 AI 工具
               </span>
             </div>
-            <div className="max-h-[60vh] overflow-y-auto p-2 sm:p-1">
+            <div className="max-h-[60vh] overflow-y-auto p-2 sm:p-1.5">
               {AI_ACTIONS.map(({ action, label, description, icon: Icon }) => (
                 <button
                   key={action}
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={() => handleAction(action)}
-                  className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left transition-colors hover:bg-gray-50 active:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700 sm:px-3 sm:py-2"
+                  className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all duration-150 hover:bg-surface-100 active:bg-surface-200 dark:text-surface-200 dark:hover:bg-surface-700"
                 >
-                  <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-brand/10 text-brand">
-                    <Icon size={18} />
+                  <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-brand/10 text-brand">
+                    <Icon size={17} />
                   </div>
                   <div className="min-w-0">
-                    <div className="text-sm font-medium">{label}</div>
-                    <div className="text-xs text-gray-400 dark:text-gray-500">
+                    <div className="text-sm font-semibold">{label}</div>
+                    <div className="text-xs text-surface-500 dark:text-surface-400">
                       {description}
                     </div>
                   </div>
@@ -217,10 +223,10 @@ export function AIToolbar({
       )}
 
       {isProcessing && (
-        <div className="fixed inset-x-0 top-20 z-50 flex justify-center">
-          <div className="flex items-center gap-3 rounded-full bg-white px-6 py-3 shadow-lg ring-1 ring-black/5 dark:bg-gray-800">
+        <div className="fixed inset-x-0 top-20 z-50 flex justify-center px-4">
+          <div className="flex items-center gap-3 rounded-2xl bg-white px-6 py-4 shadow-xl dark:bg-surface-800">
             <Loader2 size={18} className="animate-spin text-brand" />
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+            <span className="text-sm font-semibold text-surface-700 dark:text-surface-200">
               AI 处理中...
             </span>
           </div>
@@ -229,29 +235,26 @@ export function AIToolbar({
 
       {result && !isProcessing && (
         <div className="fixed inset-x-0 top-16 z-50 flex justify-center px-4">
-          <div className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 dark:bg-gray-800">
-            <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3 dark:border-gray-700">
-              <div className="flex items-center gap-2">
-                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-brand/10">
-                  <Sparkles size={12} className="text-brand" />
+          <div className="w-full max-w-lg overflow-hidden rounded-3xl bg-white shadow-2xl dark:bg-surface-800">
+            <div className="flex items-center justify-between border-b border-surface-100 px-5 py-4 dark:border-surface-700">
+              <div className="flex items-center gap-3">
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-brand/10">
+                  <Sparkles size={16} className="text-brand" />
                 </div>
-                <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">
+                <span className="text-sm font-bold text-surface-800 dark:text-surface-100">
                   AI 生成结果
                 </span>
               </div>
-              <button
-                onClick={() => setResult('')}
-                className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700"
-              >
+              <button onClick={() => setResult('')} className="toolbar-btn">
                 <X size={16} />
               </button>
             </div>
-            <div className="max-h-[40vh] overflow-y-auto p-4">
-              <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-700 dark:text-gray-200">
+            <div className="max-h-[40vh] overflow-y-auto p-5">
+              <p className="whitespace-pre-wrap text-sm leading-relaxed text-surface-700 dark:text-surface-200">
                 {result}
               </p>
             </div>
-            <div className="flex gap-2 border-t border-gray-100 px-4 py-3 dark:border-gray-700">
+            <div className="flex gap-3 border-t border-surface-100 px-5 py-4 dark:border-surface-700">
               <button
                 onClick={() => {
                   onReplace(result);
@@ -264,7 +267,7 @@ export function AIToolbar({
               </button>
               <button
                 onClick={() => setResult('')}
-                className="btn-ghost flex-1"
+                className="btn-secondary flex-1"
               >
                 取消
               </button>

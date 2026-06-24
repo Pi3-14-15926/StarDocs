@@ -67,6 +67,18 @@ export interface EditorState {
   lastSaved: string | null;
 }
 
+export type IconCdnMode =
+  | 'jsdelivr'
+  | 'statically'
+  | 'githack'
+  | 'custom'
+  | 'none';
+
+export interface AccelerationConfig {
+  iconCdnMode: IconCdnMode;
+  iconCdnCustomBase: string;
+}
+
 export interface TreeNode {
   name: string;
   path: string;

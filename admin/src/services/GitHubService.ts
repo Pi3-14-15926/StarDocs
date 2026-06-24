@@ -176,7 +176,14 @@ export class GitHubService {
       message,
       branch,
     );
-    await this.deleteFile(owner, repo, oldPath, `docs: delete old ${oldPath.split('/').pop()}`, branch, oldSha);
+    await this.deleteFile(
+      owner,
+      repo,
+      oldPath,
+      `docs: delete old ${oldPath.split('/').pop()}`,
+      branch,
+      oldSha,
+    );
   }
 
   async moveDirectory(

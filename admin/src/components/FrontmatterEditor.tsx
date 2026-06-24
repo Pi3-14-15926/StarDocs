@@ -44,9 +44,9 @@ export function FrontmatterEditor({
   );
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <div>
-        <label className="mb-1 block text-xs font-medium text-gray-500">
+        <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-surface-500 dark:text-surface-400">
           标题
         </label>
         <input
@@ -59,7 +59,7 @@ export function FrontmatterEditor({
       </div>
 
       <div>
-        <label className="mb-1 block text-xs font-medium text-gray-500">
+        <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-surface-500 dark:text-surface-400">
           描述
         </label>
         <textarea
@@ -71,7 +71,7 @@ export function FrontmatterEditor({
       </div>
 
       <div>
-        <label className="mb-1 block text-xs font-medium text-gray-500">
+        <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-surface-500 dark:text-surface-400">
           分类
         </label>
         <input
@@ -84,22 +84,19 @@ export function FrontmatterEditor({
       </div>
 
       <div>
-        <label className="mb-1 block text-xs font-medium text-gray-500">
+        <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-surface-500 dark:text-surface-400">
           标签
         </label>
-        <div className="flex flex-wrap gap-1.5 mb-2">
+        <div className="mb-2 flex flex-wrap gap-1.5">
           {(Array.isArray(frontmatter.tags) ? frontmatter.tags : []).map(
             (tag) => (
-              <span
-                key={tag}
-                className="inline-flex items-center gap-1 rounded-full bg-brand/10 px-2.5 py-0.5 text-xs text-brand"
-              >
+              <span key={tag} className="badge badge-brand gap-1">
                 {tag}
                 <button
                   onClick={() => handleRemoveTag(tag)}
-                  className="hover:text-brand-dark"
+                  className="ml-0.5 rounded-full hover:bg-brand/20 p-0.5 transition-colors"
                 >
-                  <X size={12} />
+                  <X size={10} />
                 </button>
               </span>
             ),
@@ -116,14 +113,14 @@ export function FrontmatterEditor({
             className="input-field flex-1"
             placeholder="添加标签"
           />
-          <button onClick={handleAddTag} className="btn-secondary px-2">
+          <button onClick={handleAddTag} className="btn-secondary px-3">
             <Plus size={14} />
           </button>
         </div>
       </div>
 
       <div>
-        <label className="mb-1 block text-xs font-medium text-gray-500">
+        <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-surface-500 dark:text-surface-400">
           关键词
         </label>
         <input
@@ -148,8 +145,13 @@ export function FrontmatterEditor({
       </div>
 
       {github.defaultBranch && (
-        <div className="pt-2 text-xs text-gray-400">
-          分支: {github.defaultBranch}
+        <div className="rounded-xl bg-surface-50 p-3 dark:bg-surface-800/50">
+          <p className="text-xs text-surface-500 dark:text-surface-400">
+            分支:{' '}
+            <span className="font-medium text-surface-600 dark:text-surface-300">
+              {github.defaultBranch}
+            </span>
+          </p>
         </div>
       )}
     </div>

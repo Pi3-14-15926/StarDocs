@@ -253,14 +253,21 @@ export function UploadDocumentDialog({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl dark:bg-gray-800">
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="flex items-center gap-2 text-lg font-semibold">
-            <Upload size={20} className="text-brand" />
-            上传 MD 文档
-          </h3>
-          <button onClick={handleClose} className="btn-ghost p-1">
+    <div className="dialog-overlay">
+      <div
+        className="dialog-content max-w-lg"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mb-6 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand/10">
+              <Upload size={20} className="text-brand" />
+            </div>
+            <h3 className="text-lg font-bold text-surface-900 dark:text-surface-100">
+              上传 MD 文档
+            </h3>
+          </div>
+          <button onClick={handleClose} className="toolbar-btn">
             <X size={18} />
           </button>
         </div>
@@ -270,15 +277,20 @@ export function UploadDocumentDialog({
             onDrop={handleDrop}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
-            className={`flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-8 transition-colors ${
+            className={`flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-10 transition-all duration-200 ${
               dragOver
-                ? 'border-brand bg-brand/5'
-                : 'border-gray-300 dark:border-gray-600'
+                ? 'border-brand bg-brand/5 scale-[1.02]'
+                : 'border-surface-200 hover:border-surface-300 dark:border-surface-700 dark:hover:border-surface-600'
             }`}
           >
-            <FileText size={48} className="mb-3 text-gray-400" />
-            <p className="mb-2 text-sm text-gray-600 dark:text-gray-400">
-              拖拽 .md 文件到此处，或
+            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-surface-100 dark:bg-surface-800">
+              <FileText size={28} className="text-surface-400" />
+            </div>
+            <p className="mb-1 text-sm font-medium text-surface-700 dark:text-surface-300">
+              拖拽文件到此处
+            </p>
+            <p className="mb-4 text-xs text-surface-500 dark:text-surface-400">
+              支持 .md 格式
             </p>
             <button
               onClick={() => fileInputRef.current?.click()}
@@ -296,30 +308,31 @@ export function UploadDocumentDialog({
           </div>
         ) : (
           <div className="space-y-4">
-            <div className="flex items-center gap-2 rounded-lg bg-gray-50 p-3 dark:bg-gray-700/50">
-              <FileText size={16} className="text-brand" />
-              <span className="flex-1 truncate text-sm">
-                {parsedDoc.fileName}
-              </span>
+            <div className="flex items-center gap-3 rounded-xl bg-surface-50 p-3 dark:bg-surface-800/50">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand/10">
+                <FileText size={18} className="text-brand" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="truncate text-sm font-medium text-surface-700 dark:text-surface-300">
+                  {parsedDoc.fileName}
+                </p>
+              </div>
               <button
                 onClick={resetState}
-                className="text-xs text-gray-500 hover:text-brand"
+                className="text-xs font-medium text-brand hover:text-brand-dark"
               >
                 重新选择
               </button>
             </div>
 
             {Object.keys(parsedDoc.frontmatter).length > 0 && (
-              <div className="rounded-lg bg-green-50 p-3 dark:bg-green-900/20">
-                <p className="mb-1 text-xs font-medium text-green-700 dark:text-green-400">
+              <div className="rounded-xl bg-emerald-50 p-3 dark:bg-emerald-900/20">
+                <p className="mb-2 text-xs font-bold text-emerald-600 dark:text-emerald-400">
                   已解析 Frontmatter
                 </p>
-                <div className="flex flex-wrap gap-1">
+                <div className="flex flex-wrap gap-1.5">
                   {Object.keys(parsedDoc.frontmatter).map((key) => (
-                    <span
-                      key={key}
-                      className="rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-700 dark:bg-green-800 dark:text-green-300"
-                    >
+                    <span key={key} className="badge badge-success">
                       {key}
                     </span>
                   ))}
@@ -328,7 +341,7 @@ export function UploadDocumentDialog({
             )}
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label className="mb-2 block text-sm font-semibold text-surface-700 dark:text-surface-300">
                 分类目录
               </label>
               <select
@@ -346,7 +359,7 @@ export function UploadDocumentDialog({
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label className="mb-2 block text-sm font-semibold text-surface-700 dark:text-surface-300">
                 标题
               </label>
               <input
@@ -359,13 +372,13 @@ export function UploadDocumentDialog({
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label className="mb-2 block text-sm font-semibold text-surface-700 dark:text-surface-300">
                 描述
               </label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="input-field min-h-[60px] resize-y"
+                className="input-field min-h-[80px] resize-y"
                 placeholder="文档描述（可选）"
               />
             </div>

@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { useAlert } from './hooks/useAlert';
 import { AdminPage } from './pages/AdminPage';
-import { AIConfigPage } from './pages/AIConfigPage';
+import { SettingsPage } from './pages/SettingsPage';
 import { SetupPage } from './pages/SetupPage';
 import { useConfigStore } from './stores/configStore';
 
@@ -34,7 +34,18 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-        <Route path="/admin/ai-config" element={<AIConfigPage />} />
+        <Route
+          path="/admin/settings"
+          element={
+            <ProtectedRoute>
+              <SettingsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/ai-config"
+          element={<Navigate to="/admin/settings" replace />}
+        />
         <Route path="*" element={<Navigate to="/admin" replace />} />
       </Routes>
       {AlertComponent}
