@@ -1,33 +1,56 @@
-import React, { useCallback, useState } from 'react';
+import clsx from 'clsx';
 import {
-  ChevronRight,
   ChevronDown,
+  ChevronRight,
   FileText,
   Folder,
   FolderOpen,
-  Search,
-  Plus,
-  Trash2,
+  FolderPlus,
+  FolderInput,
   Loader2,
+  MoreVertical,
+  Pencil,
+  Plus,
+  Search,
+  Trash2,
+  Upload,
 } from 'lucide-react';
-import type { DocumentNode } from '@/types';
+import type React from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useDocumentStore } from '@/stores/documentStore';
+import { useConfigStore } from '@/stores/configStore';
+import type { DocumentNode } from '@/types';
 import { ConfirmDialog } from './ConfirmDialog';
-import clsx from 'clsx';
+import { MoveDialog } from './MoveDialog';
+import { showAlert } from '@/hooks/useAlert';
 
 interface TreeNodeProps {
   node: DocumentNode;
   level?: number;
+  onNewFolder?: (parentPath: string) => void;
 }
 
-function TreeNodeComponent({ node, level = 0 }: TreeNodeProps) {
-  const { currentPath, loadDocument, expandedPaths, toggleExpanded, deleteDocument } =
-    useDocumentStore();
+function TreeNodeComponent({ node, level = 0, onNewFolder }: TreeNodeProps) {
+  const {
+    currentPath,
+    loadDocument,
+    expandedPaths,
+    toggleExpanded,
+    deleteDocument,
+    renameDirectory,
+  } = useDocumentStore();
+  const { github } = useConfigStore();
   const [isLoadingChildren, setIsLoadingChildren] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [newName, setNewName] = useState(node.name);
+  const [showMoveDialog, setShowMoveDialog] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
   const isExpanded = expandedPaths.has(node.path);
   const isActive = currentPath === node.path;
   const isDir = node.type === 'directory';
+  const docsDir = github.docsDir || 'docs';
 
   const handleClick = useCallback(async () => {
     if (isDir) {
@@ -39,18 +62,68 @@ function TreeNodeComponent({ node, level = 0 }: TreeNodeProps) {
     }
   }, [isDir, node.path, toggleExpanded, loadDocument]);
 
-  const handleDelete = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation();
-      setShowDeleteConfirm(true);
-    },
-    [],
-  );
+  const handleDelete = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowDeleteConfirm(true);
+    setShowMenu(false);
+  }, []);
 
   const confirmDelete = useCallback(async () => {
     setShowDeleteConfirm(false);
     await deleteDocument(node.path);
   }, [node.path, deleteDocument]);
+
+  const handleRename = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    setNewName(node.name);
+    setIsRenaming(true);
+    setShowMenu(false);
+  }, [node.name]);
+
+  const confirmRename = useCallback(async () => {
+    if (!newName.trim() || newName === node.name) {
+      setIsRenaming(false);
+      return;
+    }
+
+    const oldDirPath = node.path;
+    const parentPath = oldDirPath.substring(0, oldDirPath.lastIndexOf('/'));
+    const newPath = `${parentPath}/${newName.trim()}`;
+
+    try {
+      await renameDirectory(oldDirPath, newPath);
+      setIsRenaming(false);
+      showAlert('success', '重命名成功', `文件夹已重命名为 ${newName.trim()}`);
+    } catch (error) {
+      showAlert(
+        'error',
+        '重命名失败',
+        error instanceof Error ? error.message : '请重试',
+      );
+    }
+  }, [newName, node.name, node.path, renameDirectory]);
+
+  const handleMove = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowMoveDialog(true);
+    setShowMenu(false);
+  }, []);
+
+  const handleNewSubfolder = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (onNewFolder) {
+        onNewFolder(node.path);
+      }
+      setShowMenu(false);
+    },
+    [node.path, onNewFolder],
+  );
+
+  const handleMenuToggle = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowMenu((prev) => !prev);
+  }, []);
 
   const icon = isDir ? (
     isLoadingChildren ? (
@@ -86,14 +159,79 @@ function TreeNodeComponent({ node, level = 0 }: TreeNodeProps) {
       >
         {chevron}
         {icon}
-        <span className="truncate flex-1">{node.name}</span>
-        {!isDir && (
-          <button
-            onClick={handleDelete}
-            className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-opacity"
-          >
-            <Trash2 size={14} />
-          </button>
+        {isRenaming ? (
+          <div className="flex flex-1 items-center gap-1" onClick={(e) => e.stopPropagation()}>
+            <input
+              type="text"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') confirmRename();
+                if (e.key === 'Escape') setIsRenaming(false);
+              }}
+              onBlur={confirmRename}
+              className="input-field py-0.5 text-xs"
+              autoFocus
+            />
+          </div>
+        ) : (
+          <span className="truncate flex-1">{node.name}</span>
+        )}
+        {!isRenaming && (
+          <div className="relative" ref={menuRef}>
+            <button
+              onClick={handleMenuToggle}
+              className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-gray-600 transition-opacity p-0.5"
+            >
+              <MoreVertical size={14} />
+            </button>
+            {showMenu && (
+              <div className="absolute right-0 top-full z-50 mt-1 w-40 rounded-lg border border-gray-200 bg-white py-1 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                {isDir && (
+                  <>
+                    <button
+                      onClick={handleNewSubfolder}
+                      className="flex w-full items-center gap-2 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                    >
+                      <FolderPlus size={14} />
+                      新建子文件夹
+                    </button>
+                    <button
+                      onClick={handleRename}
+                      className="flex w-full items-center gap-2 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                    >
+                      <Pencil size={14} />
+                      重命名
+                    </button>
+                    <button
+                      onClick={handleMove}
+                      className="flex w-full items-center gap-2 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                    >
+                      <FolderInput size={14} />
+                      移动
+                    </button>
+                    <div className="my-1 border-t border-gray-200 dark:border-gray-700" />
+                    <button
+                      onClick={handleDelete}
+                      className="flex w-full items-center gap-2 px-3 py-1.5 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+                    >
+                      <Trash2 size={14} />
+                      删除
+                    </button>
+                  </>
+                )}
+                {!isDir && (
+                  <button
+                    onClick={handleMove}
+                    className="flex w-full items-center gap-2 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                  >
+                    <FolderInput size={14} />
+                    移动
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
         )}
       </div>
       {isDir && isExpanded && node.children && (
@@ -104,28 +242,52 @@ function TreeNodeComponent({ node, level = 0 }: TreeNodeProps) {
               return a.type === 'directory' ? -1 : 1;
             })
             .map((child) => (
-              <TreeNodeComponent key={child.path} node={child} level={level + 1} />
+              <TreeNodeComponent
+                key={child.path}
+                node={child}
+                level={level + 1}
+                onNewFolder={onNewFolder}
+              />
             ))}
         </div>
       )}
       <ConfirmDialog
         isOpen={showDeleteConfirm}
-        title="删除文档"
-        message={`确定删除 ${node.name}？此操作不可恢复。`}
+        title={isDir ? '删除文件夹' : '删除文档'}
+        message={
+          isDir
+            ? `确定删除文件夹 "${node.name}" 及其所有内容？此操作不可恢复。`
+            : `确定删除 ${node.name}？此操作不可恢复。`
+        }
         confirmText="删除"
         danger
         onConfirm={confirmDelete}
         onCancel={() => setShowDeleteConfirm(false)}
       />
+      {showMoveDialog && (
+        <MoveDialog
+          isOpen={showMoveDialog}
+          sourcePath={node.path}
+          sourceName={node.name}
+          sourceType={node.type}
+          onClose={() => setShowMoveDialog(false)}
+        />
+      )}
     </div>
   );
 }
 
 interface DocumentTreeProps {
   onNewDocument?: () => void;
+  onUploadDocument?: () => void;
+  onNewFolder?: (parentPath: string) => void;
 }
 
-export function DocumentTree({ onNewDocument }: DocumentTreeProps) {
+export function DocumentTree({
+  onNewDocument,
+  onUploadDocument,
+  onNewFolder,
+}: DocumentTreeProps) {
   const { tree, isLoading, searchQuery, setSearchQuery } = useDocumentStore();
 
   const filterTree = (nodes: DocumentNode[], query: string): DocumentNode[] => {
@@ -149,7 +311,10 @@ export function DocumentTree({ onNewDocument }: DocumentTreeProps) {
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-2 border-b border-gray-200 p-3 dark:border-gray-700">
         <div className="relative flex-1">
-          <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Search
+            size={14}
+            className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400"
+          />
           <input
             type="text"
             placeholder="搜索文档..."
@@ -158,8 +323,26 @@ export function DocumentTree({ onNewDocument }: DocumentTreeProps) {
             className="input-field pl-8 py-1.5 text-xs"
           />
         </div>
-        <button onClick={onNewDocument} className="btn-primary px-2 py-1.5" title="新建文档">
+        <button
+          onClick={onNewDocument}
+          className="btn-primary px-2 py-1.5"
+          title="新建文档"
+        >
           <Plus size={14} />
+        </button>
+        <button
+          onClick={() => onNewFolder && onNewFolder('')}
+          className="btn-primary px-2 py-1.5"
+          title="新建文件夹"
+        >
+          <FolderPlus size={14} />
+        </button>
+        <button
+          onClick={onUploadDocument}
+          className="btn-primary px-2 py-1.5"
+          title="上传文档"
+        >
+          <Upload size={14} />
         </button>
       </div>
 
@@ -179,7 +362,13 @@ export function DocumentTree({ onNewDocument }: DocumentTreeProps) {
               if (a.type === b.type) return a.name.localeCompare(b.name);
               return a.type === 'directory' ? -1 : 1;
             })
-            .map((node) => <TreeNodeComponent key={node.path} node={node} />)
+            .map((node) => (
+              <TreeNodeComponent
+                key={node.path}
+                node={node}
+                onNewFolder={onNewFolder}
+              />
+            ))
         )}
       </div>
     </div>

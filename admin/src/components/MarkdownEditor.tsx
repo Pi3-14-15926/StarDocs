@@ -1,8 +1,21 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { Save, Eye, Edit3, Bold, Italic, Code, Link, Image, List, Heading1, Heading2, Pencil } from 'lucide-react';
-import { useDocumentStore } from '@/stores/documentStore';
-import { showAlert } from '@/hooks/useAlert';
 import clsx from 'clsx';
+import {
+  Bold,
+  Code,
+  Edit3,
+  Eye,
+  Heading1,
+  Heading2,
+  Image,
+  Italic,
+  Link,
+  List,
+  Pencil,
+  Save,
+} from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { showAlert } from '@/hooks/useAlert';
+import { useDocumentStore } from '@/stores/documentStore';
 
 interface EditorToolbarProps {
   onInsert: (before: string, after?: string) => void;
@@ -11,29 +24,61 @@ interface EditorToolbarProps {
 function EditorToolbar({ onInsert }: EditorToolbarProps) {
   return (
     <div className="flex items-center gap-1 border-b border-gray-200 px-3 py-1.5 dark:border-gray-700">
-      <button onClick={() => onInsert('**', '**')} className="btn-ghost px-2 py-1" title="粗体">
+      <button
+        onClick={() => onInsert('**', '**')}
+        className="btn-ghost px-2 py-1"
+        title="粗体"
+      >
         <Bold size={16} />
       </button>
-      <button onClick={() => onInsert('*', '*')} className="btn-ghost px-2 py-1" title="斜体">
+      <button
+        onClick={() => onInsert('*', '*')}
+        className="btn-ghost px-2 py-1"
+        title="斜体"
+      >
         <Italic size={16} />
       </button>
-      <button onClick={() => onInsert('`', '`')} className="btn-ghost px-2 py-1" title="代码">
+      <button
+        onClick={() => onInsert('`', '`')}
+        className="btn-ghost px-2 py-1"
+        title="代码"
+      >
         <Code size={16} />
       </button>
-      <button onClick={() => onInsert('[', '](url)')} className="btn-ghost px-2 py-1" title="链接">
+      <button
+        onClick={() => onInsert('[', '](url)')}
+        className="btn-ghost px-2 py-1"
+        title="链接"
+      >
         <Link size={16} />
       </button>
-      <button onClick={() => onInsert('![alt](', ')')} className="btn-ghost px-2 py-1" title="图片">
+      <button
+        onClick={() => onInsert('![alt](', ')')}
+        className="btn-ghost px-2 py-1"
+        title="图片"
+      >
         <Image size={16} />
       </button>
       <div className="mx-1 h-4 w-px bg-gray-200 dark:bg-gray-700" />
-      <button onClick={() => onInsert('# ')} className="btn-ghost px-2 py-1" title="一级标题">
+      <button
+        onClick={() => onInsert('# ')}
+        className="btn-ghost px-2 py-1"
+        title="一级标题"
+      >
         <Heading1 size={16} />
       </button>
-      <button onClick={() => onInsert('## ')} className="btn-ghost px-2 py-1" title="二级标题">
+      <button
+        onClick={() => onInsert('## ')}
+        className="btn-ghost px-2 py-1"
+        title="二级标题"
+      >
         <Heading2 size={16} />
       </button>
-      <button onClick={() => onInsert('- ')} className="btn-ghost px-2 py-1" title="列表">
+      <button
+        onClick={() => onInsert('- ')}
+        className="btn-ghost px-2 py-1"
+        title="列表"
+      >
         <List size={16} />
       </button>
     </div>
@@ -41,8 +86,16 @@ function EditorToolbar({ onInsert }: EditorToolbarProps) {
 }
 
 export function MarkdownEditor() {
-  const { currentContent, currentPath, setCurrentContent, saveDocument, isSaving, lastSaved, renameDocument, isLoading } =
-    useDocumentStore();
+  const {
+    currentContent,
+    currentPath,
+    setCurrentContent,
+    saveDocument,
+    isSaving,
+    lastSaved,
+    renameDocument,
+    isLoading,
+  } = useDocumentStore();
   const [isPreview, setIsPreview] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -74,7 +127,11 @@ export function MarkdownEditor() {
       await renameDocument(newPath);
       setIsRenaming(false);
     } catch (error) {
-      showAlert('error', '重命名失败', error instanceof Error ? error.message : '未知错误');
+      showAlert(
+        'error',
+        '重命名失败',
+        error instanceof Error ? error.message : '未知错误',
+      );
     }
   }, [currentPath, newName, renameDocument]);
 
@@ -93,14 +150,19 @@ export function MarkdownEditor() {
       const selected = displayContent.substring(start, end);
       const replacement = before + (selected || 'text') + (after || '');
       const newContent =
-        displayContent.substring(0, start) + replacement + displayContent.substring(end);
+        displayContent.substring(0, start) +
+        replacement +
+        displayContent.substring(end);
 
       setLocalContent(newContent);
 
       setTimeout(() => {
         textarea.focus();
         const cursorPos = start + before.length;
-        textarea.setSelectionRange(cursorPos, cursorPos + (selected || 'text').length);
+        textarea.setSelectionRange(
+          cursorPos,
+          cursorPos + (selected || 'text').length,
+        );
       }, 0);
     },
     [displayContent, currentContent, isEditing],
@@ -143,10 +205,16 @@ export function MarkdownEditor() {
                 autoFocus
                 placeholder="新文件名"
               />
-              <button onClick={handleRename} className="btn-primary px-2 py-1 text-xs">
+              <button
+                onClick={handleRename}
+                className="btn-primary px-2 py-1 text-xs"
+              >
                 确认
               </button>
-              <button onClick={() => setIsRenaming(false)} className="btn-ghost px-2 py-1 text-xs">
+              <button
+                onClick={() => setIsRenaming(false)}
+                className="btn-ghost px-2 py-1 text-xs"
+              >
                 取消
               </button>
             </div>
@@ -176,12 +244,19 @@ export function MarkdownEditor() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setIsPreview(!isPreview)}
-            className={clsx('btn-ghost text-xs', isPreview && 'bg-gray-100 dark:bg-gray-800')}
+            className={clsx(
+              'btn-ghost text-xs',
+              isPreview && 'bg-gray-100 dark:bg-gray-800',
+            )}
           >
             {isPreview ? <Edit3 size={14} /> : <Eye size={14} />}
             {isPreview ? '编辑' : '预览'}
           </button>
-          <button onClick={handleSave} disabled={isSaving} className="btn-primary text-xs">
+          <button
+            onClick={handleSave}
+            disabled={isSaving}
+            className="btn-primary text-xs"
+          >
             <Save size={14} />
             {isSaving ? '保存中...' : '保存'}
           </button>
@@ -192,7 +267,10 @@ export function MarkdownEditor() {
 
       <div className="flex-1 overflow-auto">
         {isPreview ? (
-          <div className="h-full overflow-y-auto p-4 dark:text-gray-200" dangerouslySetInnerHTML={{ __html: renderMarkdown(displayContent) }} />
+          <div
+            className="h-full overflow-y-auto p-4 dark:text-gray-200"
+            dangerouslySetInnerHTML={{ __html: renderMarkdown(displayContent) }}
+          />
         ) : (
           <textarea
             ref={textareaRef}
@@ -213,20 +291,45 @@ export function MarkdownEditor() {
 
 function renderMarkdown(md: string): string {
   let html = md
-    .replace(/^### (.+)$/gm, '<h3 style="font-size:1.17em;font-weight:bold;margin:16px 0 8px;color:inherit">$1</h3>')
-    .replace(/^## (.+)$/gm, '<h2 style="font-size:1.5em;font-weight:bold;margin:20px 0 10px;color:inherit">$1</h2>')
-    .replace(/^# (.+)$/gm, '<h1 style="font-size:2em;font-weight:bold;margin:24px 0 12px;color:inherit">$1</h1>')
+    .replace(
+      /^### (.+)$/gm,
+      '<h3 style="font-size:1.17em;font-weight:bold;margin:16px 0 8px;color:inherit">$1</h3>',
+    )
+    .replace(
+      /^## (.+)$/gm,
+      '<h2 style="font-size:1.5em;font-weight:bold;margin:20px 0 10px;color:inherit">$1</h2>',
+    )
+    .replace(
+      /^# (.+)$/gm,
+      '<h1 style="font-size:2em;font-weight:bold;margin:24px 0 12px;color:inherit">$1</h1>',
+    )
     .replace(/\*\*(.+?)\*\*/g, '<strong style="font-weight:600">$1</strong>')
     .replace(/\*(.+?)\*/g, '<em style="font-style:italic">$1</em>')
-    .replace(/`(.+?)`/g, '<code style="background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:0.9em;color:#e11d48">$1</code>')
-    .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" style="max-width:100%;border-radius:8px;margin:8px 0" />')
-    .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank" rel="noopener" style="color:#3b82f6;text-decoration:underline">$1</a>')
+    .replace(
+      /`(.+?)`/g,
+      '<code style="background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:0.9em;color:#e11d48">$1</code>',
+    )
+    .replace(
+      /!\[([^\]]*)\]\(([^)]+)\)/g,
+      '<img src="$2" alt="$1" style="max-width:100%;border-radius:8px;margin:8px 0" />',
+    )
+    .replace(
+      /\[(.+?)\]\((.+?)\)/g,
+      '<a href="$2" target="_blank" rel="noopener" style="color:#3b82f6;text-decoration:underline">$1</a>',
+    )
     .replace(/^- (.+)$/gm, '<li style="margin:4px 0;margin-left:20px">$1</li>')
-    .replace(/(<li.*>.*<\/li>\n?)+/g, '<ul style="list-style:disc;padding-left:20px;margin:8px 0">$&</ul>')
-    .replace(/^(\d+)\. (.+)$/gm, '<li style="margin:4px 0;margin-left:20px;list-style:decimal">$2</li>')
+    .replace(
+      /(<li.*>.*<\/li>\n?)+/g,
+      '<ul style="list-style:disc;padding-left:20px;margin:8px 0">$&</ul>',
+    )
+    .replace(
+      /^(\d+)\. (.+)$/gm,
+      '<li style="margin:4px 0;margin-left:20px;list-style:decimal">$2</li>',
+    )
     .replace(/\n\n/g, '</p><p style="margin:12px 0;line-height:1.7">')
     .replace(/\n/g, '<br/>');
 
-  if (!html.startsWith('<')) html = `<p style="margin:12px 0;line-height:1.7">${html}</p>`;
+  if (!html.startsWith('<'))
+    html = `<p style="margin:12px 0;line-height:1.7">${html}</p>`;
   return html;
 }

@@ -1,6 +1,6 @@
-import { useState, useCallback } from 'react';
-import { AlertDialog } from '@/components/AlertDialog';
+import { useCallback, useState } from 'react';
 import type { AlertType } from '@/components/AlertDialog';
+import { AlertDialog } from '@/components/AlertDialog';
 
 interface AlertState {
   isOpen: boolean;
@@ -9,7 +9,9 @@ interface AlertState {
   message: string;
 }
 
-let globalShowAlert: ((type: AlertType, title: string, message: string) => void) | null = null;
+let globalShowAlert:
+  | ((type: AlertType, title: string, message: string) => void)
+  | null = null;
 
 export function showAlert(type: AlertType, title: string, message: string) {
   globalShowAlert?.(type, title, message);
@@ -23,9 +25,12 @@ export function useAlert() {
     message: '',
   });
 
-  const show = useCallback((type: AlertType, title: string, message: string) => {
-    setAlert({ isOpen: true, type, title, message });
-  }, []);
+  const show = useCallback(
+    (type: AlertType, title: string, message: string) => {
+      setAlert({ isOpen: true, type, title, message });
+    },
+    [],
+  );
 
   const close = useCallback(() => {
     setAlert((prev) => ({ ...prev, isOpen: false }));

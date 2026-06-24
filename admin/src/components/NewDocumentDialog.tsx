@@ -1,16 +1,31 @@
-import { useState, useCallback } from 'react';
-import { X, FolderPlus } from 'lucide-react';
-import { useDocumentStore } from '@/stores/documentStore';
-import { useConfigStore } from '@/stores/configStore';
+import { FolderPlus, X } from 'lucide-react';
+import { useCallback, useState } from 'react';
 import { showAlert } from '@/hooks/useAlert';
+import { useConfigStore } from '@/stores/configStore';
+import { useDocumentStore } from '@/stores/documentStore';
+import type { DocumentNode } from '@/types';
 
 interface NewDocumentDialogProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+function getDirectoryOptions(nodes: DocumentNode[], prefix = ''): string[] {
+  const result: string[] = [];
+  for (const node of nodes) {
+    if (node.type === 'directory') {
+      const fullPath = prefix ? `${prefix}/${node.name}` : node.name;
+      result.push(fullPath);
+      if (node.children) {
+        result.push(...getDirectoryOptions(node.children, fullPath));
+      }
+    }
+  }
+  return result;
+}
+
 export function NewDocumentDialog({ isOpen, onClose }: NewDocumentDialogProps) {
-  const { createDocument } = useDocumentStore();
+  const { createDocument, tree } = useDocumentStore();
   const { github } = useConfigStore();
   const [name, setName] = useState('');
   const [category, setCategory] = useState('');
@@ -18,13 +33,16 @@ export function NewDocumentDialog({ isOpen, onClose }: NewDocumentDialogProps) {
   const [description, setDescription] = useState('');
   const [isCreating, setIsCreating] = useState(false);
 
+  const docsDir = github.docsDir || 'docs';
+  const directories = getDirectoryOptions(tree, docsDir);
+
   const handleCreate = useCallback(async () => {
     if (!name.trim()) return;
 
     const fileName = name.endsWith('.md') ? name : `${name}.md`;
     const path = category
-      ? `${github.docsDir || 'docs'}/${category}/${fileName}`
-      : `${github.docsDir || 'docs'}/${fileName}`;
+      ? `${category}/${fileName}`
+      : `${docsDir}/${fileName}`;
 
     const frontmatter: Record<string, unknown> = {};
     if (title) frontmatter.title = title;
@@ -42,11 +60,23 @@ export function NewDocumentDialog({ isOpen, onClose }: NewDocumentDialogProps) {
       onClose();
     } catch (error) {
       console.error('Failed to create document:', error);
-      showAlert('error', '创建失败', error instanceof Error ? error.message : '请重试');
+      showAlert(
+        'error',
+        '创建失败',
+        error instanceof Error ? error.message : '请重试',
+      );
     } finally {
       setIsCreating(false);
     }
-  }, [name, category, title, description, github.docsDir, createDocument, onClose]);
+  }, [
+    name,
+    category,
+    title,
+    description,
+    docsDir,
+    createDocument,
+    onClose,
+  ]);
 
   if (!isOpen) return null;
 
@@ -82,13 +112,18 @@ export function NewDocumentDialog({ isOpen, onClose }: NewDocumentDialogProps) {
             <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
               分类目录
             </label>
-            <input
-              type="text"
+            <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
               className="input-field"
-              placeholder="如：实用工具、学习笔记"
-            />
+            >
+              <option value="">根目录</option>
+              {directories.map((dir) => (
+                <option key={dir} value={dir}>
+                  {dir.replace(`${docsDir}/`, '')}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>

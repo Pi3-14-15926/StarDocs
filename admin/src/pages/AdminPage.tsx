@@ -1,37 +1,48 @@
-import { useState, useCallback, useEffect } from 'react';
-import {
-  Menu,
-  X,
-  FileText,
-  Settings,
-  LogOut,
-  Moon,
-  Sun,
-  ChevronLeft,
-  Trash2,
-  Copy,
-} from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { DocumentTree } from '@/components/DocumentTree';
-import { MarkdownEditor } from '@/components/MarkdownEditor';
-import { FrontmatterEditor } from '@/components/FrontmatterEditor';
-import { AIToolbar } from '@/components/AIToolbar';
-import { ImageUploader } from '@/components/ImageUploader';
-import { NewDocumentDialog } from '@/components/NewDocumentDialog';
-import { ConfirmDialog } from '@/components/ConfirmDialog';
-import { useDocumentStore } from '@/stores/documentStore';
-import { useConfigStore } from '@/stores/configStore';
-import { showAlert } from '@/hooks/useAlert';
 import clsx from 'clsx';
+import {
+  ChevronLeft,
+  Copy,
+  FileText,
+  LogOut,
+  Menu,
+  Moon,
+  Settings,
+  Sun,
+  Trash2,
+  Upload,
+  X,
+} from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { AIToolbar } from '@/components/AIToolbar';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { DocumentTree } from '@/components/DocumentTree';
+import { FrontmatterEditor } from '@/components/FrontmatterEditor';
+import { ImageUploader } from '@/components/ImageUploader';
+import { MarkdownEditor } from '@/components/MarkdownEditor';
+import { NewDocumentDialog } from '@/components/NewDocumentDialog';
+import { NewFolderDialog } from '@/components/NewFolderDialog';
+import { UploadDocumentDialog } from '@/components/UploadDocumentDialog';
+import { showAlert } from '@/hooks/useAlert';
+import { useConfigStore } from '@/stores/configStore';
+import { useDocumentStore } from '@/stores/documentStore';
 
 export function AdminPage() {
   const navigate = useNavigate();
-  const { loadTree, currentPath, currentFrontmatter, setCurrentFrontmatter, deleteDocument } =
-    useDocumentStore();
+  const {
+    loadTree,
+    currentPath,
+    currentFrontmatter,
+    setCurrentFrontmatter,
+    deleteDocument,
+  } = useDocumentStore();
   const { github } = useConfigStore();
   const [showSidebar, setShowSidebar] = useState(true);
   const [showProperties, setShowProperties] = useState(false);
   const [showNewDoc, setShowNewDoc] = useState(false);
+  const [showUploadDoc, setShowUploadDoc] = useState(false);
+  const [showNewFolder, setShowNewFolder] = useState(false);
+  const [newFolderParentPath, setNewFolderParentPath] = useState('');
   const [isDark, setIsDark] = useState(() =>
     document.documentElement.classList.contains('dark'),
   );
@@ -93,7 +104,11 @@ export function AdminPage() {
       await deleteDocument(currentPath);
       showAlert('success', '删除成功', '文档已删除');
     } catch (error) {
-      showAlert('error', '删除失败', error instanceof Error ? error.message : '未知错误');
+      showAlert(
+        'error',
+        '删除失败',
+        error instanceof Error ? error.message : '未知错误',
+      );
     }
   }, [currentPath, deleteDocument]);
 
@@ -102,6 +117,11 @@ export function AdminPage() {
     navigator.clipboard.writeText(currentPath);
     showAlert('success', '已复制', '路径已复制到剪贴板');
   }, [currentPath]);
+
+  const handleNewFolder = useCallback((parentPath: string) => {
+    setNewFolderParentPath(parentPath);
+    setShowNewFolder(true);
+  }, []);
 
   const fileName = currentPath?.split('/').pop() ?? '';
 
@@ -125,17 +145,26 @@ export function AdminPage() {
         <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 dark:border-gray-700">
           <div className="flex items-center gap-2">
             <FileText size={20} className="text-brand" />
-            <span className="font-semibold text-gray-900 dark:text-gray-100">文档管理</span>
+            <span className="font-semibold text-gray-900 dark:text-gray-100">
+              文档管理
+            </span>
           </div>
           {isMobile && (
-            <button onClick={() => setShowSidebar(false)} className="btn-ghost p-1">
+            <button
+              onClick={() => setShowSidebar(false)}
+              className="btn-ghost p-1"
+            >
               <X size={18} />
             </button>
           )}
         </div>
 
         <div className="flex-1 overflow-hidden">
-          <DocumentTree onNewDocument={() => setShowNewDoc(true)} />
+          <DocumentTree
+            onNewDocument={() => setShowNewDoc(true)}
+            onUploadDocument={() => setShowUploadDoc(true)}
+            onNewFolder={handleNewFolder}
+          />
         </div>
 
         <div className="border-t border-gray-200 p-3 dark:border-gray-700">
@@ -157,7 +186,11 @@ export function AdminPage() {
             >
               <Settings size={16} />
             </button>
-            <button onClick={handleLogout} className="btn-ghost p-2" title="退出">
+            <button
+              onClick={handleLogout}
+              className="btn-ghost p-2"
+              title="退出"
+            >
               <LogOut size={16} />
             </button>
           </div>
@@ -176,7 +209,10 @@ export function AdminPage() {
               >
                 <ChevronLeft
                   size={18}
-                  className={clsx('transition-transform', !showSidebar && 'rotate-180')}
+                  className={clsx(
+                    'transition-transform',
+                    !showSidebar && 'rotate-180',
+                  )}
                 />
               </button>
               <span className="text-sm text-gray-500">
@@ -193,7 +229,8 @@ export function AdminPage() {
                     const start = editor.selectionStart;
                     const end = editor.selectionEnd;
                     const value = editor.value;
-                    editor.value = value.substring(0, start) + text + value.substring(end);
+                    editor.value =
+                      value.substring(0, start) + text + value.substring(end);
                     editor.setSelectionRange(start, start + text.length);
                   }
                 }}
@@ -202,8 +239,12 @@ export function AdminPage() {
                   if (editor) {
                     const pos = editor.selectionStart;
                     const value = editor.value;
-                    editor.value = value.substring(0, pos) + text + value.substring(pos);
-                    editor.setSelectionRange(pos + text.length, pos + text.length);
+                    editor.value =
+                      value.substring(0, pos) + text + value.substring(pos);
+                    editor.setSelectionRange(
+                      pos + text.length,
+                      pos + text.length,
+                    );
                   }
                 }}
               />
@@ -214,17 +255,31 @@ export function AdminPage() {
                     const pos = editor.selectionStart;
                     const value = editor.value;
                     const insertion = `![image](${url})`;
-                    editor.value = value.substring(0, pos) + insertion + value.substring(pos);
-                    editor.setSelectionRange(pos + insertion.length, pos + insertion.length);
+                    editor.value =
+                      value.substring(0, pos) +
+                      insertion +
+                      value.substring(pos);
+                    editor.setSelectionRange(
+                      pos + insertion.length,
+                      pos + insertion.length,
+                    );
                   }
                 }}
               />
               {currentPath && (
                 <>
-                  <button onClick={handleCopyPath} className="btn-ghost p-1.5" title="复制路径">
+                  <button
+                    onClick={handleCopyPath}
+                    className="btn-ghost p-1.5"
+                    title="复制路径"
+                  >
                     <Copy size={16} />
                   </button>
-                  <button onClick={handleDelete} className="btn-ghost p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20" title="删除文档">
+                  <button
+                    onClick={handleDelete}
+                    className="btn-ghost p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+                    title="删除文档"
+                  >
                     <Trash2 size={16} />
                   </button>
                 </>
@@ -238,7 +293,10 @@ export function AdminPage() {
           <header className="border-b border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
             {/* 第一行：菜单 + 文件名 + 关闭侧边栏 */}
             <div className="flex items-center justify-between px-3 py-2">
-              <button onClick={() => setShowSidebar(true)} className="btn-ghost p-1.5">
+              <button
+                onClick={() => setShowSidebar(true)}
+                className="btn-ghost p-1.5"
+              >
                 <Menu size={20} />
               </button>
               <span className="flex-1 truncate text-center text-sm font-medium text-gray-700 dark:text-gray-200">
@@ -262,7 +320,8 @@ export function AdminPage() {
                       const start = editor.selectionStart;
                       const end = editor.selectionEnd;
                       const value = editor.value;
-                      editor.value = value.substring(0, start) + text + value.substring(end);
+                      editor.value =
+                        value.substring(0, start) + text + value.substring(end);
                       editor.setSelectionRange(start, start + text.length);
                     }
                   }}
@@ -271,8 +330,12 @@ export function AdminPage() {
                     if (editor) {
                       const pos = editor.selectionStart;
                       const value = editor.value;
-                      editor.value = value.substring(0, pos) + text + value.substring(pos);
-                      editor.setSelectionRange(pos + text.length, pos + text.length);
+                      editor.value =
+                        value.substring(0, pos) + text + value.substring(pos);
+                      editor.setSelectionRange(
+                        pos + text.length,
+                        pos + text.length,
+                      );
                     }
                   }}
                 />
@@ -283,16 +346,30 @@ export function AdminPage() {
                       const pos = editor.selectionStart;
                       const value = editor.value;
                       const insertion = `![image](${url})`;
-                      editor.value = value.substring(0, pos) + insertion + value.substring(pos);
-                      editor.setSelectionRange(pos + insertion.length, pos + insertion.length);
+                      editor.value =
+                        value.substring(0, pos) +
+                        insertion +
+                        value.substring(pos);
+                      editor.setSelectionRange(
+                        pos + insertion.length,
+                        pos + insertion.length,
+                      );
                     }
                   }}
                 />
                 <div className="flex-1" />
-                <button onClick={handleCopyPath} className="btn-ghost p-1.5" title="复制路径">
+                <button
+                  onClick={handleCopyPath}
+                  className="btn-ghost p-1.5"
+                  title="复制路径"
+                >
                   <Copy size={16} />
                 </button>
-                <button onClick={handleDelete} className="btn-ghost p-1.5 text-red-500" title="删除">
+                <button
+                  onClick={handleDelete}
+                  className="btn-ghost p-1.5 text-red-500"
+                  title="删除"
+                >
                   <Trash2 size={16} />
                 </button>
               </div>
@@ -330,7 +407,10 @@ export function AdminPage() {
               <div className="fixed bottom-0 left-0 right-0 z-40 max-h-[70vh] overflow-y-auto rounded-t-2xl bg-white p-4 dark:bg-gray-800">
                 <div className="mb-3 flex items-center justify-between">
                   <h3 className="text-sm font-semibold">文档属性</h3>
-                  <button onClick={() => setShowProperties(false)} className="btn-ghost p-1">
+                  <button
+                    onClick={() => setShowProperties(false)}
+                    className="btn-ghost p-1"
+                  >
                     <X size={16} />
                   </button>
                 </div>
@@ -344,7 +424,19 @@ export function AdminPage() {
         </div>
       </main>
 
-      <NewDocumentDialog isOpen={showNewDoc} onClose={() => setShowNewDoc(false)} />
+      <NewDocumentDialog
+        isOpen={showNewDoc}
+        onClose={() => setShowNewDoc(false)}
+      />
+      <NewFolderDialog
+        isOpen={showNewFolder}
+        parentPath={newFolderParentPath}
+        onClose={() => setShowNewFolder(false)}
+      />
+      <UploadDocumentDialog
+        isOpen={showUploadDoc}
+        onClose={() => setShowUploadDoc(false)}
+      />
       <ConfirmDialog
         isOpen={showDeleteConfirm}
         title="删除文档"

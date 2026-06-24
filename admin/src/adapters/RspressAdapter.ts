@@ -1,4 +1,4 @@
-import type { DocumentNode, Frontmatter, DocumentMeta } from '@/types';
+import type { DocumentMeta, DocumentNode, Frontmatter } from '@/types';
 
 export interface Adapter {
   getDocumentTree(root: string): Promise<DocumentNode[]>;
@@ -7,7 +7,10 @@ export interface Adapter {
   getCategoryFromPath(path: string, docsDir: string): string;
 }
 
-function parseFrontmatter(content: string): { data: Frontmatter; content: string } {
+function parseFrontmatter(content: string): {
+  data: Frontmatter;
+  content: string;
+} {
   const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/);
   if (!match) {
     return { data: {}, content };
@@ -52,7 +55,9 @@ function parseFrontmatter(content: string): { data: Frontmatter; content: string
       if (String(value).startsWith('[') && String(value).endsWith(']')) {
         const inner = String(value).slice(1, -1);
         data[key] = inner
-          ? inner.split(',').map((s: string) => s.trim().replace(/^["']|["']$/g, ''))
+          ? inner
+              .split(',')
+              .map((s: string) => s.trim().replace(/^["']|["']$/g, ''))
           : [];
       } else {
         if (value === 'true') value = true;

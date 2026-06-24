@@ -1,6 +1,13 @@
-import { useState, useCallback } from 'react';
+import {
+  CheckCircle,
+  Eye,
+  EyeOff,
+  Github,
+  Settings,
+  XCircle,
+} from 'lucide-react';
+import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings, Github, Eye, EyeOff, CheckCircle, XCircle } from 'lucide-react';
 import { useConfigStore } from '@/stores/configStore';
 
 export function SetupPage() {
@@ -13,16 +20,21 @@ export function SetupPage() {
   const [token, setToken] = useState(github.token);
   const [showToken, setShowToken] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
-  const [testResult, setTestResult] = useState<'success' | 'failed' | null>(null);
+  const [testResult, setTestResult] = useState<'success' | 'failed' | null>(
+    null,
+  );
 
   const handleTest = useCallback(async () => {
     setIsTesting(true);
     setTestResult(null);
-    setGitHubConfig({ 
-      owner, repo, branch, token, 
-      docsDir, 
-      assetsDir: `${docsDir}/assets`, 
-      defaultBranch: branch 
+    setGitHubConfig({
+      owner,
+      repo,
+      branch,
+      token,
+      docsDir,
+      assetsDir: `${docsDir}/assets`,
+      defaultBranch: branch,
     });
     const connected = await testConnection();
     setTestResult(connected ? 'success' : 'failed');
@@ -30,17 +42,29 @@ export function SetupPage() {
   }, [owner, repo, branch, token, docsDir, setGitHubConfig, testConnection]);
 
   const handleSave = useCallback(async () => {
-    setGitHubConfig({ 
-      owner, repo, branch, token, 
-      docsDir, 
-      assetsDir: `${docsDir}/assets`, 
-      defaultBranch: branch 
+    setGitHubConfig({
+      owner,
+      repo,
+      branch,
+      token,
+      docsDir,
+      assetsDir: `${docsDir}/assets`,
+      defaultBranch: branch,
     });
     const connected = await testConnection();
     if (connected) {
       navigate('/admin');
     }
-  }, [owner, repo, branch, token, docsDir, setGitHubConfig, testConnection, navigate]);
+  }, [
+    owner,
+    repo,
+    branch,
+    token,
+    docsDir,
+    setGitHubConfig,
+    testConnection,
+    navigate,
+  ]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-4 dark:from-gray-900 dark:to-gray-950">
@@ -49,7 +73,9 @@ export function SetupPage() {
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-brand/10">
             <Settings size={32} className="text-brand" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">文档管理</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            文档管理
+          </h1>
           <p className="mt-2 text-sm text-gray-500">配置 GitHub 仓库连接</p>
         </div>
 

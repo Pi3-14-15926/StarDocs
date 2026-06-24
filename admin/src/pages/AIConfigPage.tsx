@@ -1,15 +1,40 @@
-import { useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save, Sparkles } from 'lucide-react';
+import { useCallback, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useConfigStore } from '@/stores/configStore';
 
 const PROVIDERS = [
-  { id: 'openai', name: 'OpenAI', apiUrl: 'https://api.openai.com/v1/chat/completions' },
-  { id: 'deepseek', name: 'DeepSeek', apiUrl: 'https://api.deepseek.com/v1/chat/completions' },
-  { id: 'openrouter', name: 'OpenRouter', apiUrl: 'https://openrouter.ai/api/v1/chat/completions' },
-  { id: 'siliconflow', name: '硅基流动', apiUrl: 'https://api.siliconflow.cn/v1/chat/completions' },
-  { id: 'moonshot', name: 'Moonshot', apiUrl: 'https://api.moonshot.cn/v1/chat/completions' },
-  { id: 'dashscope', name: '阿里百炼', apiUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions' },
+  {
+    id: 'openai',
+    name: 'OpenAI',
+    apiUrl: 'https://api.openai.com/v1/chat/completions',
+  },
+  {
+    id: 'deepseek',
+    name: 'DeepSeek',
+    apiUrl: 'https://api.deepseek.com/v1/chat/completions',
+  },
+  {
+    id: 'openrouter',
+    name: 'OpenRouter',
+    apiUrl: 'https://openrouter.ai/api/v1/chat/completions',
+  },
+  {
+    id: 'siliconflow',
+    name: '硅基流动',
+    apiUrl: 'https://api.siliconflow.cn/v1/chat/completions',
+  },
+  {
+    id: 'moonshot',
+    name: 'Moonshot',
+    apiUrl: 'https://api.moonshot.cn/v1/chat/completions',
+  },
+  {
+    id: 'dashscope',
+    name: '阿里百炼',
+    apiUrl:
+      'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
+  },
   { id: 'custom', name: '自定义', apiUrl: '' },
 ];
 
@@ -47,7 +72,10 @@ export function AIConfigPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950">
       <div className="mx-auto max-w-lg p-6">
-        <button onClick={() => navigate('/admin')} className="mb-6 btn-ghost text-sm">
+        <button
+          onClick={() => navigate('/admin')}
+          className="mb-6 btn-ghost text-sm"
+        >
           <ArrowLeft size={16} />
           返回后台
         </button>
@@ -58,7 +86,9 @@ export function AIConfigPage() {
               <Sparkles size={24} className="text-brand" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">AI 设置</h1>
+              <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                AI 设置
+              </h1>
               <p className="text-sm text-gray-500">配置 AI 辅助写作服务</p>
             </div>
           </div>
@@ -110,7 +140,9 @@ export function AIConfigPage() {
               className="input-field"
               placeholder="sk-xxxxxxxxxxxx"
             />
-            <p className="mt-1 text-xs text-gray-400">API Key 仅存储在本地浏览器</p>
+            <p className="mt-1 text-xs text-gray-400">
+              API Key 仅存储在本地浏览器
+            </p>
           </div>
 
           <div>

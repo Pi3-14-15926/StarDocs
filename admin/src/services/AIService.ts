@@ -1,4 +1,4 @@
-import type { AIConfig, AIAction } from '@/types';
+import type { AIAction, AIConfig } from '@/types';
 
 const ACTION_PROMPTS: Record<AIAction, string> = {
   polish: '润色以下文本，使其更流畅、专业。仅返回Markdown，禁止解释。',
@@ -8,7 +8,8 @@ const ACTION_PROMPTS: Record<AIAction, string> = {
   translate:
     '自动识别文本语言并翻译为另一种语言（中文翻译为英文，英文翻译为中文）。仅返回Markdown，禁止解释。',
   'generate-title': '为以下文本生成一个简洁的标题。仅返回标题文本，禁止解释。',
-  'generate-tags': '为以下文本生成3-5个相关标签，以YAML数组格式返回。仅返回tags数组，禁止解释。',
+  'generate-tags':
+    '为以下文本生成3-5个相关标签，以YAML数组格式返回。仅返回tags数组，禁止解释。',
   'generate-description':
     '为以下文本生成一段简短的SEO描述（100-150字）。仅返回描述文本，禁止解释。',
   'generate-faq':
@@ -127,7 +128,12 @@ export class AIService {
     title?: string;
     frontmatter?: Record<string, unknown>;
   }): string {
-    const parts = ['你是一个专业的技术文档助手。', '要求：', '- 仅返回Markdown内容', '- 禁止解释、禁止废话、禁止前言后语'];
+    const parts = [
+      '你是一个专业的技术文档助手。',
+      '要求：',
+      '- 仅返回Markdown内容',
+      '- 禁止解释、禁止废话、禁止前言后语',
+    ];
 
     if (context?.title) {
       parts.push(`- 文档标题: ${context.title}`);

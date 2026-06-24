@@ -1,14 +1,17 @@
-import { useCallback, useState } from 'react';
 import { Plus, X } from 'lucide-react';
-import type { Frontmatter } from '@/types';
+import { useCallback, useState } from 'react';
 import { useConfigStore } from '@/stores/configStore';
+import type { Frontmatter } from '@/types';
 
 interface FrontmatterEditorProps {
   frontmatter: Frontmatter;
   onChange: (frontmatter: Frontmatter) => void;
 }
 
-export function FrontmatterEditor({ frontmatter, onChange }: FrontmatterEditorProps) {
+export function FrontmatterEditor({
+  frontmatter,
+  onChange,
+}: FrontmatterEditorProps) {
   const { github } = useConfigStore();
   const [newTag, setNewTag] = useState('');
 
@@ -43,7 +46,9 @@ export function FrontmatterEditor({ frontmatter, onChange }: FrontmatterEditorPr
   return (
     <div className="space-y-4">
       <div>
-        <label className="mb-1 block text-xs font-medium text-gray-500">标题</label>
+        <label className="mb-1 block text-xs font-medium text-gray-500">
+          标题
+        </label>
         <input
           type="text"
           value={(frontmatter.title as string) ?? ''}
@@ -54,7 +59,9 @@ export function FrontmatterEditor({ frontmatter, onChange }: FrontmatterEditorPr
       </div>
 
       <div>
-        <label className="mb-1 block text-xs font-medium text-gray-500">描述</label>
+        <label className="mb-1 block text-xs font-medium text-gray-500">
+          描述
+        </label>
         <textarea
           value={(frontmatter.description as string) ?? ''}
           onChange={(e) => handleFieldChange('description', e.target.value)}
@@ -64,7 +71,9 @@ export function FrontmatterEditor({ frontmatter, onChange }: FrontmatterEditorPr
       </div>
 
       <div>
-        <label className="mb-1 block text-xs font-medium text-gray-500">分类</label>
+        <label className="mb-1 block text-xs font-medium text-gray-500">
+          分类
+        </label>
         <input
           type="text"
           value={(frontmatter.category as string) ?? ''}
@@ -75,26 +84,35 @@ export function FrontmatterEditor({ frontmatter, onChange }: FrontmatterEditorPr
       </div>
 
       <div>
-        <label className="mb-1 block text-xs font-medium text-gray-500">标签</label>
+        <label className="mb-1 block text-xs font-medium text-gray-500">
+          标签
+        </label>
         <div className="flex flex-wrap gap-1.5 mb-2">
-          {(Array.isArray(frontmatter.tags) ? frontmatter.tags : []).map((tag) => (
-            <span
-              key={tag}
-              className="inline-flex items-center gap-1 rounded-full bg-brand/10 px-2.5 py-0.5 text-xs text-brand"
-            >
-              {tag}
-              <button onClick={() => handleRemoveTag(tag)} className="hover:text-brand-dark">
-                <X size={12} />
-              </button>
-            </span>
-          ))}
+          {(Array.isArray(frontmatter.tags) ? frontmatter.tags : []).map(
+            (tag) => (
+              <span
+                key={tag}
+                className="inline-flex items-center gap-1 rounded-full bg-brand/10 px-2.5 py-0.5 text-xs text-brand"
+              >
+                {tag}
+                <button
+                  onClick={() => handleRemoveTag(tag)}
+                  className="hover:text-brand-dark"
+                >
+                  <X size={12} />
+                </button>
+              </span>
+            ),
+          )}
         </div>
         <div className="flex gap-2">
           <input
             type="text"
             value={newTag}
             onChange={(e) => setNewTag(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
+            onKeyDown={(e) =>
+              e.key === 'Enter' && (e.preventDefault(), handleAddTag())
+            }
             className="input-field flex-1"
             placeholder="添加标签"
           />
@@ -105,10 +123,16 @@ export function FrontmatterEditor({ frontmatter, onChange }: FrontmatterEditorPr
       </div>
 
       <div>
-        <label className="mb-1 block text-xs font-medium text-gray-500">关键词</label>
+        <label className="mb-1 block text-xs font-medium text-gray-500">
+          关键词
+        </label>
         <input
           type="text"
-          value={Array.isArray(frontmatter.keywords) ? frontmatter.keywords.join(', ') : ''}
+          value={
+            Array.isArray(frontmatter.keywords)
+              ? frontmatter.keywords.join(', ')
+              : ''
+          }
           onChange={(e) =>
             handleFieldChange(
               'keywords',

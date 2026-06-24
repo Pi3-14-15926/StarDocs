@@ -1,5 +1,5 @@
 import axios, { type AxiosInstance } from 'axios';
-import type { GitHubConfig, TreeNode, DocumentNode } from '@/types';
+import type { DocumentNode, GitHubConfig, TreeNode } from '@/types';
 
 const GITHUB_API = 'https://api.github.com';
 
@@ -37,7 +37,7 @@ export class GitHubService {
       { params: { ref: branch } },
     );
     const content = decodeURIComponent(
-      escape(atob(data.content.replace(/\n/g, '')))
+      escape(atob(data.content.replace(/\n/g, ''))),
     );
     return { content, sha: data.sha };
   }
@@ -50,23 +50,29 @@ export class GitHubService {
   ): Promise<DocumentNode[]> {
     const url = `/repos/${owner}/${repo}/contents/${path}`;
     console.log('Fetching tree:', { owner, repo, path, branch, url });
-    
+
     const { data } = await this.client.get(url, { params: { ref: branch } });
-    
-    console.log('API response:', Array.isArray(data) ? data.length + ' items' : typeof data);
-    
+
+    console.log(
+      'API response:',
+      Array.isArray(data) ? data.length + ' items' : typeof data,
+    );
+
     if (!Array.isArray(data)) {
       throw new Error('Invalid response from GitHub API');
     }
 
     return data
       .filter((item: { name: string }) => !item.name.startsWith('.'))
-      .map((item: { name: string; path: string; type: string; sha: string }) => ({
-        name: item.name,
-        path: item.path,
-        type: item.type === 'dir' ? ('directory' as const) : ('file' as const),
-        sha: item.sha,
-      }));
+      .map(
+        (item: { name: string; path: string; type: string; sha: string }) => ({
+          name: item.name,
+          path: item.path,
+          type:
+            item.type === 'dir' ? ('directory' as const) : ('file' as const),
+          sha: item.sha,
+        }),
+      );
   }
 
   async getTreeRecursive(
@@ -124,9 +130,123 @@ export class GitHubService {
     newPath: string,
     branch: string,
   ): Promise<void> {
-    const { content, sha: oldSha } = await this.getFile(owner, repo, oldPath, branch);
-    await this.createOrUpdateFile(owner, repo, newPath, content, `docs: rename ${oldPath.split('/').pop()} → ${newPath.split('/').pop()}`, branch);
-    await this.deleteFile(owner, repo, oldPath, `docs: delete old file ${oldPath.split('/').pop()}`, branch, oldSha);
+    const { content, sha: oldSha } = await this.getFile(
+      owner,
+      repo,
+      oldPath,
+      branch,
+    );
+    await this.createOrUpdateFile(
+      owner,
+      repo,
+      newPath,
+      content,
+      `docs: rename ${oldPath.split('/').pop()} → ${newPath.split('/').pop()}`,
+      branch,
+    );
+    await this.deleteFile(
+      owner,
+      repo,
+      oldPath,
+      `docs: delete old file ${oldPath.split('/').pop()}`,
+      branch,
+      oldSha,
+    );
+  }
+
+  async moveFile(
+    owner: string,
+    repo: string,
+    oldPath: string,
+    newPath: string,
+    message: string,
+    branch: string,
+  ): Promise<void> {
+    const { content, sha: oldSha } = await this.getFile(
+      owner,
+      repo,
+      oldPath,
+      branch,
+    );
+    await this.createOrUpdateFile(
+      owner,
+      repo,
+      newPath,
+      content,
+      message,
+      branch,
+    );
+    await this.deleteFile(owner, repo, oldPath, `docs: delete old ${oldPath.split('/').pop()}`, branch, oldSha);
+  }
+
+  async moveDirectory(
+    owner: string,
+    repo: string,
+    oldDirPath: string,
+    newDirPath: string,
+    branch: string,
+  ): Promise<void> {
+    const files = await this.getTreeRecursive(owner, repo, branch);
+    const dirPrefix = oldDirPath.endsWith('/') ? oldDirPath : `${oldDirPath}/`;
+    const affectedFiles = files.filter(
+      (f) => f.type === 'blob' && f.path.startsWith(dirPrefix),
+    );
+
+    for (const file of affectedFiles) {
+      const relativePath = file.path.slice(dirPrefix.length);
+      const newPath = `${newDirPath}/${relativePath}`;
+      const { content } = await this.getFile(owner, repo, file.path, branch);
+      await this.createOrUpdateFile(
+        owner,
+        repo,
+        newPath,
+        content,
+        `docs: move ${file.path.split('/').pop()}`,
+        branch,
+      );
+      await this.deleteFile(
+        owner,
+        repo,
+        file.path,
+        `docs: delete old ${file.path.split('/').pop()}`,
+        branch,
+        file.sha,
+      );
+    }
+  }
+
+  async deleteDirectory(
+    owner: string,
+    repo: string,
+    dirPath: string,
+    branch: string,
+  ): Promise<void> {
+    const files = await this.getTreeRecursive(owner, repo, branch);
+    const dirPrefix = dirPath.endsWith('/') ? dirPath : `${dirPath}/`;
+    const affectedFiles = files.filter(
+      (f) => f.type === 'blob' && f.path.startsWith(dirPrefix),
+    );
+
+    for (const file of affectedFiles) {
+      await this.deleteFile(
+        owner,
+        repo,
+        file.path,
+        `docs: delete ${file.path.split('/').pop()}`,
+        branch,
+        file.sha,
+      );
+    }
+  }
+
+  async renameDirectory(
+    owner: string,
+    repo: string,
+    oldDirPath: string,
+    newDirPath: string,
+    branch: string,
+  ): Promise<void> {
+    await this.moveDirectory(owner, repo, oldDirPath, newDirPath, branch);
   }
 
   async getCommits(
@@ -135,11 +255,12 @@ export class GitHubService {
     path: string,
     branch: string,
     perPage = 10,
-  ): Promise<Array<{ sha: string; message: string; date: string; author: string }>> {
-    const { data } = await this.client.get(
-      `/repos/${owner}/${repo}/commits`,
-      { params: { path, sha: branch, per_page: perPage } },
-    );
+  ): Promise<
+    Array<{ sha: string; message: string; date: string; author: string }>
+  > {
+    const { data } = await this.client.get(`/repos/${owner}/${repo}/commits`, {
+      params: { path, sha: branch, per_page: perPage },
+    });
     return data.map(
       (commit: {
         sha: string;

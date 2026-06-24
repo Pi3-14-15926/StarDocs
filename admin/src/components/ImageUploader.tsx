@@ -1,7 +1,7 @@
+import { ImageIcon, X } from 'lucide-react';
 import { useCallback, useRef, useState } from 'react';
-import { X, ImageIcon } from 'lucide-react';
-import { useConfigStore } from '@/stores/configStore';
 import { showAlert } from '@/hooks/useAlert';
+import { useConfigStore } from '@/stores/configStore';
 
 interface ImageUploaderProps {
   onInsert: (url: string) => void;
@@ -45,7 +45,11 @@ export function ImageUploader({ onInsert }: ImageUploaderProps) {
         reader.readAsDataURL(file);
       } catch (error) {
         console.error('Upload failed:', error);
-        showAlert('error', '上传失败', error instanceof Error ? error.message : '请重试');
+        showAlert(
+          'error',
+          '上传失败',
+          error instanceof Error ? error.message : '请重试',
+        );
       } finally {
         setIsUploading(false);
       }

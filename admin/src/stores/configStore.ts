@@ -1,7 +1,7 @@
 import { create } from 'zustand';
-import type { GitHubConfig, AIConfig } from '@/types';
-import { GitHubService } from '@/services/GitHubService';
 import { AIService } from '@/services/AIService';
+import { GitHubService } from '@/services/GitHubService';
+import type { AIConfig, GitHubConfig } from '@/types';
 
 const CONFIG_KEY = 'rspress-admin-config';
 const AI_CONFIG_KEY = 'rspress-admin-ai-config';
@@ -11,7 +11,15 @@ function loadConfig(): GitHubConfig {
     const saved = localStorage.getItem(CONFIG_KEY);
     if (saved) return JSON.parse(saved);
   } catch {}
-  return { owner: '', repo: '', branch: 'main', token: '', docsDir: 'docs', assetsDir: 'docs/assets', defaultBranch: 'main' };
+  return {
+    owner: '',
+    repo: '',
+    branch: 'main',
+    token: '',
+    docsDir: 'docs',
+    assetsDir: 'docs/assets',
+    defaultBranch: 'main',
+  };
 }
 
 function loadAIConfig(): AIConfig {
@@ -19,7 +27,12 @@ function loadAIConfig(): AIConfig {
     const saved = localStorage.getItem(AI_CONFIG_KEY);
     if (saved) return JSON.parse(saved);
   } catch {}
-  return { apiUrl: 'https://api.deepseek.com/v1/chat/completions', apiKey: '', model: 'deepseek-chat', provider: 'deepseek' };
+  return {
+    apiUrl: 'https://api.deepseek.com/v1/chat/completions',
+    apiKey: '',
+    model: 'deepseek-chat',
+    provider: 'deepseek',
+  };
 }
 
 interface ConfigState {

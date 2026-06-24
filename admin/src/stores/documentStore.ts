@@ -1,8 +1,8 @@
 import { create } from 'zustand';
-import type { DocumentNode, Frontmatter } from '@/types';
-import { useConfigStore } from './configStore';
 import { adapter } from '@/adapters/RspressAdapter';
 import { showAlert } from '@/hooks/useAlert';
+import type { DocumentNode, Frontmatter } from '@/types';
+import { useConfigStore } from './configStore';
 
 interface DocumentState {
   tree: DocumentNode[];
@@ -22,20 +22,35 @@ interface DocumentState {
   setCurrentContent: (content: string) => void;
   setCurrentFrontmatter: (frontmatter: Frontmatter) => void;
   saveDocument: () => Promise<void>;
-  createDocument: (path: string, frontmatter: Frontmatter, content: string) => Promise<void>;
+  createDocument: (
+    path: string,
+    frontmatter: Frontmatter,
+    content: string,
+  ) => Promise<void>;
+  createDirectory: (path: string) => Promise<void>;
   deleteDocument: (path: string) => Promise<void>;
+  deleteDirectory: (path: string) => Promise<void>;
   renameDocument: (newPath: string) => Promise<void>;
+  renameDirectory: (oldPath: string, newPath: string) => Promise<void>;
+  moveDocument: (oldPath: string, newPath: string) => Promise<void>;
   setSearchQuery: (query: string) => void;
   toggleExpanded: (path: string) => Promise<void>;
 }
 
-function updateNodeChildren(nodes: DocumentNode[], path: string, children: DocumentNode[]): DocumentNode[] {
+function updateNodeChildren(
+  nodes: DocumentNode[],
+  path: string,
+  children: DocumentNode[],
+): DocumentNode[] {
   return nodes.map((node) => {
     if (node.path === path) {
       return { ...node, children };
     }
     if (node.children) {
-      return { ...node, children: updateNodeChildren(node.children, path, children) };
+      return {
+        ...node,
+        children: updateNodeChildren(node.children, path, children),
+      };
     }
     return node;
   });
@@ -52,7 +67,10 @@ function removeNode(nodes: DocumentNode[], path: string): DocumentNode[] {
     });
 }
 
-function findNode(nodes: DocumentNode[], path: string): DocumentNode | undefined {
+function findNode(
+  nodes: DocumentNode[],
+  path: string,
+): DocumentNode | undefined {
   for (const node of nodes) {
     if (node.path === path) return node;
     if (node.children) {
@@ -106,7 +124,11 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
       set({ tree });
     } catch (error) {
       console.error('Failed to load tree:', error);
-      showAlert('error', '加载失败', error instanceof Error ? error.message : '加载文档树失败');
+      showAlert(
+        'error',
+        '加载失败',
+        error instanceof Error ? error.message : '加载文档树失败',
+      );
     } finally {
       set({ isLoading: false });
     }
@@ -156,7 +178,11 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
       });
     } catch (error) {
       console.error('Failed to load document:', error);
-      showAlert('error', '加载失败', error instanceof Error ? error.message : '加载文档失败');
+      showAlert(
+        'error',
+        '加载失败',
+        error instanceof Error ? error.message : '加载文档失败',
+      );
     } finally {
       set({ isLoading: false });
     }
@@ -164,17 +190,22 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
 
   setCurrentContent: (content) => set({ currentContent: content }),
 
-  setCurrentFrontmatter: (frontmatter) => set({ currentFrontmatter: frontmatter }),
+  setCurrentFrontmatter: (frontmatter) =>
+    set({ currentFrontmatter: frontmatter }),
 
   saveDocument: async () => {
     const { githubService } = useConfigStore.getState();
     const { github } = useConfigStore.getState();
-    const { currentPath, currentContent, currentFrontmatter, currentSha } = get();
+    const { currentPath, currentContent, currentFrontmatter, currentSha } =
+      get();
     if (!githubService || !currentPath) return;
 
     set({ isSaving: true });
     try {
-      const fullContent = adapter.generateDocument(currentFrontmatter, currentContent);
+      const fullContent = adapter.generateDocument(
+        currentFrontmatter,
+        currentContent,
+      );
       const { sha } = await githubService.createOrUpdateFile(
         github.owner,
         github.repo,
@@ -211,6 +242,25 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
     await get().loadTree();
   },
 
+  createDirectory: async (path) => {
+    const { githubService } = useConfigStore.getState();
+    const { github } = useConfigStore.getState();
+    if (!githubService) return;
+
+    const gitkeepPath = path.endsWith('/.gitkeep')
+      ? path
+      : `${path}/.gitkeep`;
+    await githubService.createOrUpdateFile(
+      github.owner,
+      github.repo,
+      gitkeepPath,
+      '',
+      `docs: create folder ${path.split('/').pop()}`,
+      github.branch,
+    );
+    await get().loadTree();
+  },
+
   deleteDocument: async (path) => {
     const { githubService } = useConfigStore.getState();
     const { github } = useConfigStore.getState();
@@ -220,6 +270,11 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
     const node = findNode(tree, path);
     if (!node) return;
 
+    if (node.type === 'directory') {
+      await get().deleteDirectory(path);
+      return;
+    }
+
     await githubService.deleteFile(
       github.owner,
       github.repo,
@@ -227,6 +282,20 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
       `docs: delete ${path.split('/').pop()}`,
       github.branch,
       node.sha || '',
+    );
+    await get().loadTree();
+  },
+
+  deleteDirectory: async (path) => {
+    const { githubService } = useConfigStore.getState();
+    const { github } = useConfigStore.getState();
+    if (!githubService) return;
+
+    await githubService.deleteDirectory(
+      github.owner,
+      github.repo,
+      path,
+      github.branch,
     );
     await get().loadTree();
   },
@@ -250,6 +319,67 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
       await get().loadTree();
     } catch (error) {
       console.error('Failed to rename document:', error);
+      throw error;
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  renameDirectory: async (oldPath, newPath) => {
+    const { githubService } = useConfigStore.getState();
+    const { github } = useConfigStore.getState();
+    if (!githubService) return;
+
+    set({ isLoading: true });
+    try {
+      await githubService.renameDirectory(
+        github.owner,
+        github.repo,
+        oldPath,
+        newPath,
+        github.branch,
+      );
+      await get().loadTree();
+    } catch (error) {
+      console.error('Failed to rename directory:', error);
+      throw error;
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  moveDocument: async (oldPath, newPath) => {
+    const { githubService } = useConfigStore.getState();
+    const { github } = useConfigStore.getState();
+    const { tree } = get();
+    if (!githubService) return;
+
+    const node = findNode(tree, oldPath);
+    if (!node) return;
+
+    set({ isLoading: true });
+    try {
+      if (node.type === 'directory') {
+        await githubService.moveDirectory(
+          github.owner,
+          github.repo,
+          oldPath,
+          newPath,
+          github.branch,
+        );
+      } else {
+        await githubService.moveFile(
+          github.owner,
+          github.repo,
+          oldPath,
+          newPath,
+          `docs: move ${oldPath.split('/').pop()}`,
+          github.branch,
+        );
+      }
+      await get().loadTree();
+    } catch (error) {
+      console.error('Failed to move:', error);
       throw error;
     } finally {
       set({ isLoading: false });

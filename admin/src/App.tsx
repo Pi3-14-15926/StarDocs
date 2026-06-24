@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
-import { SetupPage } from './pages/SetupPage';
+import { Navigate, Route, Routes } from 'react-router-dom';
+import { useAlert } from './hooks/useAlert';
 import { AdminPage } from './pages/AdminPage';
 import { AIConfigPage } from './pages/AIConfigPage';
+import { SetupPage } from './pages/SetupPage';
 import { useConfigStore } from './stores/configStore';
-import { useAlert } from './hooks/useAlert';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { github } = useConfigStore();
