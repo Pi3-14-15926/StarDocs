@@ -4,12 +4,13 @@ title: "Howdz起始页"
 
 
 
+
 # 浏览器扩展
 ### 前言：
 本期我们推荐的开源实用工具是浏览器的 Howdz起始页扩展，它可以为浏览器提供一个干净简洁高度自定义的起始页。
 ### 一、示范
 ![[file-20260427094932357.png]]
-![image](https://raw.githubusercontent.com/Pi3-14-15926/StarDocs/image/images/研究记录/Howdz起始页/20260628_1782644934985.png)
+
 
 
 ### 二、安装
