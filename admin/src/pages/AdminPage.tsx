@@ -34,12 +34,18 @@ export function AdminPage() {
   const [showUploadDoc, setShowUploadDoc] = useState(false);
   const [showNewFolder, setShowNewFolder] = useState(false);
   const [newFolderParentPath, setNewFolderParentPath] = useState('');
+  const [defaultFolderPath, setDefaultFolderPath] = useState('');
   const [isDark, setIsDark] = useState(() =>
     document.documentElement.classList.contains('dark'),
   );
   const [isMobile, setIsMobile] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [selectedText, setSelectedText] = useState('');
+  const [insertImageUrl, setInsertImageUrl] = useState('');
+  const [imageInsertKey, setImageInsertKey] = useState(0);
+  const [aiInsertText, setAiInsertText] = useState('');
+  const [aiInsertKey, setAiInsertKey] = useState(0);
+  const [aiReplaceSelected, setAiReplaceSelected] = useState(false);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -159,8 +165,14 @@ export function AdminPage() {
 
         <div className="flex-1 overflow-hidden">
           <DocumentTree
-            onNewDocument={() => setShowNewDoc(true)}
-            onUploadDocument={() => setShowUploadDoc(true)}
+            onNewDocument={(folderPath) => {
+              setDefaultFolderPath(folderPath || '');
+              setShowNewDoc(true);
+            }}
+            onUploadDocument={(folderPath) => {
+              setDefaultFolderPath(folderPath || '');
+              setShowUploadDoc(true);
+            }}
             onNewFolder={handleNewFolder}
           />
         </div>
@@ -237,46 +249,21 @@ export function AdminPage() {
               <AIToolbar
                 selectedText={selectedText}
                 onReplace={(text) => {
-                  const editor = document.querySelector('textarea');
-                  if (editor) {
-                    const start = editor.selectionStart;
-                    const end = editor.selectionEnd;
-                    const value = editor.value;
-                    editor.value =
-                      value.substring(0, start) + text + value.substring(end);
-                    editor.setSelectionRange(start, start + text.length);
-                  }
+                  setAiInsertText(text);
+                  setAiReplaceSelected(true);
+                  setAiInsertKey((k) => k + 1);
                 }}
                 onInsert={(text) => {
-                  const editor = document.querySelector('textarea');
-                  if (editor) {
-                    const pos = editor.selectionStart;
-                    const value = editor.value;
-                    editor.value =
-                      value.substring(0, pos) + text + value.substring(pos);
-                    editor.setSelectionRange(
-                      pos + text.length,
-                      pos + text.length,
-                    );
-                  }
+                  setAiInsertText(text);
+                  setAiReplaceSelected(false);
+                  setAiInsertKey((k) => k + 1);
                 }}
               />
               <ImageUploader
+                currentPath={currentPath}
                 onInsert={(url) => {
-                  const editor = document.querySelector('textarea');
-                  if (editor) {
-                    const pos = editor.selectionStart;
-                    const value = editor.value;
-                    const insertion = `![image](${url})`;
-                    editor.value =
-                      value.substring(0, pos) +
-                      insertion +
-                      value.substring(pos);
-                    editor.setSelectionRange(
-                      pos + insertion.length,
-                      pos + insertion.length,
-                    );
-                  }
+                  setInsertImageUrl(url);
+                  setImageInsertKey((k) => k + 1);
                 }}
               />
               {currentPath && (
@@ -322,46 +309,21 @@ export function AdminPage() {
                 <AIToolbar
                   selectedText={selectedText}
                   onReplace={(text) => {
-                    const editor = document.querySelector('textarea');
-                    if (editor) {
-                      const start = editor.selectionStart;
-                      const end = editor.selectionEnd;
-                      const value = editor.value;
-                      editor.value =
-                        value.substring(0, start) + text + value.substring(end);
-                      editor.setSelectionRange(start, start + text.length);
-                    }
+                    setAiInsertText(text);
+                    setAiReplaceSelected(true);
+                    setAiInsertKey((k) => k + 1);
                   }}
                   onInsert={(text) => {
-                    const editor = document.querySelector('textarea');
-                    if (editor) {
-                      const pos = editor.selectionStart;
-                      const value = editor.value;
-                      editor.value =
-                        value.substring(0, pos) + text + value.substring(pos);
-                      editor.setSelectionRange(
-                        pos + text.length,
-                        pos + text.length,
-                      );
-                    }
+                    setAiInsertText(text);
+                    setAiReplaceSelected(false);
+                    setAiInsertKey((k) => k + 1);
                   }}
                 />
                 <ImageUploader
+                  currentPath={currentPath}
                   onInsert={(url) => {
-                    const editor = document.querySelector('textarea');
-                    if (editor) {
-                      const pos = editor.selectionStart;
-                      const value = editor.value;
-                      const insertion = `![image](${url})`;
-                      editor.value =
-                        value.substring(0, pos) +
-                        insertion +
-                        value.substring(pos);
-                      editor.setSelectionRange(
-                        pos + insertion.length,
-                        pos + insertion.length,
-                      );
-                    }
+                    setInsertImageUrl(url);
+                    setImageInsertKey((k) => k + 1);
                   }}
                 />
                 <div className="flex-1" />
@@ -388,7 +350,19 @@ export function AdminPage() {
         <div className="flex flex-1 overflow-hidden bg-white dark:bg-surface-900">
           {/* Editor */}
           <div className="flex-1 overflow-hidden">
-            <MarkdownEditor />
+            <MarkdownEditor
+              externalInsert={insertImageUrl}
+              externalInsertKey={imageInsertKey}
+              onExternalInsertDone={() => {
+                setInsertImageUrl('');
+              }}
+              externalAiText={aiInsertText}
+              externalAiKey={aiInsertKey}
+              aiReplaceSelected={aiReplaceSelected}
+              onExternalAiDone={() => {
+                setAiInsertText('');
+              }}
+            />
           </div>
         </div>
       </main>
@@ -396,6 +370,7 @@ export function AdminPage() {
       <NewDocumentDialog
         isOpen={showNewDoc}
         onClose={() => setShowNewDoc(false)}
+        defaultCategory={defaultFolderPath}
       />
       <NewFolderDialog
         isOpen={showNewFolder}
@@ -405,6 +380,7 @@ export function AdminPage() {
       <UploadDocumentDialog
         isOpen={showUploadDoc}
         onClose={() => setShowUploadDoc(false)}
+        defaultCategory={defaultFolderPath}
       />
       <ConfirmDialog
         isOpen={showDeleteConfirm}

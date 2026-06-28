@@ -91,7 +91,7 @@ function EditorToolbar({
       <button
         onClick={() => onInsert('`', '`')}
         className="toolbar-btn"
-        title="代码"
+        title="行内代码"
       >
         <Code size={15} />
       </button>
@@ -152,7 +152,59 @@ function EditorToolbar({
 
 const MAX_HISTORY = 100;
 
-export function MarkdownEditor() {
+function extractTitle(content: string): string {
+  const h1Match = content.match(/^#\s+(.+)$/m);
+  if (h1Match) return h1Match[1].trim();
+  const h2Match = content.match(/^##\s+(.+)$/m);
+  if (h2Match) return h2Match[1].trim();
+  return '';
+}
+
+function setTitleInContent(content: string, newTitle: string): string {
+  const lines = content.split('\n');
+  let titleIndex = -1;
+
+  for (let i = 0; i < lines.length; i++) {
+    if (/^#\s+/.test(lines[i])) {
+      titleIndex = i;
+      break;
+    }
+    if (/^##\s+/.test(lines[i]) && titleIndex === -1) {
+      titleIndex = i;
+      break;
+    }
+  }
+
+  if (titleIndex >= 0) {
+    const line = lines[titleIndex];
+    const isH1 = line.startsWith('# ');
+    lines[titleIndex] = (isH1 ? '# ' : '## ') + newTitle;
+  } else {
+    lines.unshift(`# ${newTitle}`, '');
+  }
+
+  return lines.join('\n');
+}
+
+interface MarkdownEditorProps {
+  externalInsert?: string;
+  externalInsertKey?: number;
+  onExternalInsertDone?: () => void;
+  externalAiText?: string;
+  externalAiKey?: number;
+  aiReplaceSelected?: boolean;
+  onExternalAiDone?: () => void;
+}
+
+export function MarkdownEditor({
+  externalInsert,
+  externalInsertKey,
+  onExternalInsertDone,
+  externalAiText,
+  externalAiKey,
+  aiReplaceSelected,
+  onExternalAiDone,
+}: MarkdownEditorProps) {
   const {
     currentContent,
     currentPath,
@@ -166,19 +218,20 @@ export function MarkdownEditor() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [localContent, setLocalContent] = useState('');
-  const [isRenaming, setIsRenaming] = useState(false);
-  const [newName, setNewName] = useState('');
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [editTitle, setEditTitle] = useState('');
   const [history, setHistory] = useState<HistoryState[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const isUndoRedoRef = useRef(false);
 
   const displayContent = isEditing ? localContent : currentContent;
+  const currentTitle = extractTitle(displayContent);
 
   useEffect(() => {
     setIsEditing(false);
     setLocalContent('');
     setIsPreview(false);
-    setIsRenaming(false);
+    setIsEditingTitle(false);
     setHistory([]);
     setHistoryIndex(-1);
   }, [currentPath]);
@@ -227,23 +280,18 @@ export function MarkdownEditor() {
     await saveDocument();
   }, [displayContent, setCurrentContent, saveDocument]);
 
-  const handleRename = useCallback(async () => {
-    if (!currentPath || !newName.trim()) return;
-    const fileName = newName.trim();
-    const finalName = fileName.endsWith('.md') ? fileName : `${fileName}.md`;
-    const dir = currentPath.substring(0, currentPath.lastIndexOf('/'));
-    const newPath = `${dir}/${finalName}`;
-    try {
-      await renameDocument(newPath);
-      setIsRenaming(false);
-    } catch (error) {
-      showAlert(
-        'error',
-        '重命名失败',
-        error instanceof Error ? error.message : '未知错误',
-      );
+  const handleTitleSave = useCallback(async () => {
+    if (!editTitle.trim()) {
+      setIsEditingTitle(false);
+      return;
     }
-  }, [currentPath, newName, renameDocument]);
+    const newContent = setTitleInContent(displayContent, editTitle.trim());
+    setLocalContent(newContent);
+    setIsEditing(true);
+    setIsEditingTitle(false);
+    setCurrentContent(newContent);
+    await saveDocument();
+  }, [editTitle, displayContent, setCurrentContent, saveDocument]);
 
   const handleInsert = useCallback(
     (before: string, after?: string) => {
@@ -300,6 +348,73 @@ export function MarkdownEditor() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleSave, handleUndo, handleRedo]);
 
+  useEffect(() => {
+    if (!externalInsert) return;
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    if (!isEditing) {
+      setIsEditing(true);
+      setLocalContent(currentContent);
+    }
+
+    const currentVal = isEditing ? localContent : currentContent;
+    const pos = textarea.selectionStart || currentVal.length;
+    const insertion = `![image](${externalInsert})`;
+    const newContent =
+      currentVal.substring(0, pos) + insertion + currentVal.substring(pos);
+
+    setLocalContent(newContent);
+    setIsEditing(true);
+
+    setTimeout(() => {
+      textarea.focus();
+      const cursorPos = pos + insertion.length;
+      textarea.setSelectionRange(cursorPos, cursorPos);
+    }, 0);
+
+    onExternalInsertDone?.();
+  }, [externalInsert, externalInsertKey]);
+
+  useEffect(() => {
+    if (!externalAiText) return;
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    if (!isEditing) {
+      setIsEditing(true);
+      setLocalContent(currentContent);
+    }
+
+    const currentVal = isEditing ? localContent : currentContent;
+
+    if (aiReplaceSelected) {
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const newContent =
+        currentVal.substring(0, start) + externalAiText + currentVal.substring(end);
+      setLocalContent(newContent);
+      setIsEditing(true);
+      setTimeout(() => {
+        textarea.focus();
+        textarea.setSelectionRange(start, start + externalAiText.length);
+      }, 0);
+    } else {
+      const pos = textarea.selectionStart || currentVal.length;
+      const newContent =
+        currentVal.substring(0, pos) + externalAiText + currentVal.substring(pos);
+      setLocalContent(newContent);
+      setIsEditing(true);
+      setTimeout(() => {
+        textarea.focus();
+        const cursorPos = pos + externalAiText.length;
+        textarea.setSelectionRange(cursorPos, cursorPos);
+      }, 0);
+    }
+
+    onExternalAiDone?.();
+  }, [externalAiText, externalAiKey]);
+
   if (!currentPath) {
     return (
       <div className="flex h-full flex-col items-center justify-center text-surface-400">
@@ -315,28 +430,28 @@ export function MarkdownEditor() {
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between border-b border-surface-200/60 px-4 py-2.5 dark:border-surface-700/60">
         <div className="flex items-center gap-2">
-          {isRenaming ? (
+          {isEditingTitle ? (
             <div className="flex items-center gap-2">
               <input
                 type="text"
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleRename();
-                  if (e.key === 'Escape') setIsRenaming(false);
+                  if (e.key === 'Enter') handleTitleSave();
+                  if (e.key === 'Escape') setIsEditingTitle(false);
                 }}
-                className="input-field w-48 py-1.5 text-sm"
+                className="input-field w-64 py-1.5 text-sm"
                 autoFocus
-                placeholder="新文件名"
+                placeholder="输入文章标题"
               />
               <button
-                onClick={handleRename}
+                onClick={handleTitleSave}
                 className="btn-primary px-3 py-1.5 text-xs"
               >
-                确认
+                保存
               </button>
               <button
-                onClick={() => setIsRenaming(false)}
+                onClick={() => setIsEditingTitle(false)}
                 className="btn-secondary px-3 py-1.5 text-xs"
               >
                 取消
@@ -344,18 +459,18 @@ export function MarkdownEditor() {
             </div>
           ) : (
             <>
-              <span className="text-sm font-semibold text-surface-700 dark:text-surface-200">
-                {currentPath.split('/').pop()}
+              <span className="text-lg font-bold text-surface-700 dark:text-surface-200">
+                {currentTitle || '无标题'}
               </span>
               <button
                 onClick={() => {
-                  setNewName(currentPath.split('/').pop() || '');
-                  setIsRenaming(true);
+                  setEditTitle(currentTitle);
+                  setIsEditingTitle(true);
                 }}
                 className="text-surface-400 hover:text-brand transition-colors duration-150"
-                title="重命名"
+                title="编辑标题"
               >
-                <Pencil size={13} />
+                <Pencil size={15} />
               </button>
             </>
           )}

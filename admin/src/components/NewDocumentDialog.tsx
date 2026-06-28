@@ -8,6 +8,7 @@ import type { DocumentNode } from '@/types';
 interface NewDocumentDialogProps {
   isOpen: boolean;
   onClose: () => void;
+  defaultCategory?: string;
 }
 
 function getDirectoryOptions(nodes: DocumentNode[], prefix = ''): string[] {
@@ -24,7 +25,7 @@ function getDirectoryOptions(nodes: DocumentNode[], prefix = ''): string[] {
   return result;
 }
 
-export function NewDocumentDialog({ isOpen, onClose }: NewDocumentDialogProps) {
+export function NewDocumentDialog({ isOpen, onClose, defaultCategory }: NewDocumentDialogProps) {
   const { createDocument, tree } = useDocumentStore();
   const { github } = useConfigStore();
   const [name, setName] = useState('');
@@ -32,9 +33,28 @@ export function NewDocumentDialog({ isOpen, onClose }: NewDocumentDialogProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+  const [initialized, setInitialized] = useState(false);
 
   const docsDir = github.docsDir || 'docs';
   const directories = getDirectoryOptions(tree, docsDir);
+
+  // Set default category when dialog opens
+  if (isOpen && defaultCategory && !initialized) {
+    // Extract the relative path from docsDir
+    const relativePath = defaultCategory.startsWith(docsDir + '/')
+      ? defaultCategory.slice(docsDir.length + 1)
+      : defaultCategory;
+    setCategory(relativePath);
+    setInitialized(true);
+  }
+
+  if (!isOpen && initialized) {
+    // Reset when dialog closes
+    setTimeout(() => {
+      setInitialized(false);
+      setCategory('');
+    }, 0);
+  }
 
   const handleCreate = useCallback(async () => {
     if (!name.trim()) return;

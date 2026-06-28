@@ -2,11 +2,11 @@ import clsx from 'clsx';
 import {
   ChevronDown,
   ChevronRight,
+  FilePlus,
   FileText,
   Folder,
   FolderInput,
   FolderOpen,
-  FolderPlus,
   Loader2,
   MoreVertical,
   Pencil,
@@ -27,10 +27,11 @@ import { MoveDialog } from './MoveDialog';
 interface TreeNodeProps {
   node: DocumentNode;
   level?: number;
-  onNewFolder?: (parentPath: string) => void;
+  onNewDocument?: (folderPath: string) => void;
+  onUploadDocument?: (folderPath: string) => void;
 }
 
-function TreeNodeComponent({ node, level = 0, onNewFolder }: TreeNodeProps) {
+function TreeNodeComponent({ node, level = 0, onNewDocument, onUploadDocument }: TreeNodeProps) {
   const {
     currentPath,
     loadDocument,
@@ -50,7 +51,6 @@ function TreeNodeComponent({ node, level = 0, onNewFolder }: TreeNodeProps) {
   const isExpanded = expandedPaths.has(node.path);
   const isActive = currentPath === node.path;
   const isDir = node.type === 'directory';
-  const docsDir = github.docsDir || 'docs';
 
   const handleClick = useCallback(async () => {
     if (isDir) {
@@ -112,15 +112,26 @@ function TreeNodeComponent({ node, level = 0, onNewFolder }: TreeNodeProps) {
     setShowMenu(false);
   }, []);
 
-  const handleNewSubfolder = useCallback(
+  const handleNewDocument = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
-      if (onNewFolder) {
-        onNewFolder(node.path);
+      if (onNewDocument) {
+        onNewDocument(node.path);
       }
       setShowMenu(false);
     },
-    [node.path, onNewFolder],
+    [node.path, onNewDocument],
+  );
+
+  const handleUploadDocument = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (onUploadDocument) {
+        onUploadDocument(node.path);
+      }
+      setShowMenu(false);
+    },
+    [node.path, onUploadDocument],
   );
 
   const handleMenuToggle = useCallback((e: React.MouseEvent) => {
@@ -201,13 +212,15 @@ function TreeNodeComponent({ node, level = 0, onNewFolder }: TreeNodeProps) {
               <div className="dropdown-menu">
                 {isDir && (
                   <>
-                    <button
-                      onClick={handleNewSubfolder}
-                      className="dropdown-item"
-                    >
-                      <FolderPlus size={15} />
-                      新建子文件夹
+                    <button onClick={handleNewDocument} className="dropdown-item">
+                      <FilePlus size={15} />
+                      新建文档
                     </button>
+                    <button onClick={handleUploadDocument} className="dropdown-item">
+                      <Upload size={15} />
+                      上传文档
+                    </button>
+                    <div className="dropdown-divider" />
                     <button onClick={handleRename} className="dropdown-item">
                       <Pencil size={15} />
                       重命名
@@ -227,10 +240,24 @@ function TreeNodeComponent({ node, level = 0, onNewFolder }: TreeNodeProps) {
                   </>
                 )}
                 {!isDir && (
-                  <button onClick={handleMove} className="dropdown-item">
-                    <FolderInput size={15} />
-                    移动
-                  </button>
+                  <>
+                    <button onClick={handleRename} className="dropdown-item">
+                      <Pencil size={15} />
+                      重命名
+                    </button>
+                    <button onClick={handleMove} className="dropdown-item">
+                      <FolderInput size={15} />
+                      移动
+                    </button>
+                    <div className="dropdown-divider" />
+                    <button
+                      onClick={handleDelete}
+                      className="dropdown-item danger"
+                    >
+                      <Trash2 size={15} />
+                      删除
+                    </button>
+                  </>
                 )}
               </div>
             )}
@@ -249,7 +276,8 @@ function TreeNodeComponent({ node, level = 0, onNewFolder }: TreeNodeProps) {
                 key={child.path}
                 node={child}
                 level={level + 1}
-                onNewFolder={onNewFolder}
+                onNewDocument={onNewDocument}
+                onUploadDocument={onUploadDocument}
               />
             ))}
         </div>
@@ -281,8 +309,8 @@ function TreeNodeComponent({ node, level = 0, onNewFolder }: TreeNodeProps) {
 }
 
 interface DocumentTreeProps {
-  onNewDocument?: () => void;
-  onUploadDocument?: () => void;
+  onNewDocument?: (folderPath?: string) => void;
+  onUploadDocument?: (folderPath?: string) => void;
   onNewFolder?: (parentPath: string) => void;
 }
 
@@ -327,21 +355,21 @@ export function DocumentTree({
           />
         </div>
         <button
-          onClick={onNewDocument}
+          onClick={() => onNewDocument?.()}
           className="toolbar-btn"
           title="新建文档"
         >
           <Plus size={16} />
         </button>
         <button
-          onClick={() => onNewFolder && onNewFolder('')}
+          onClick={() => onNewFolder?.('')}
           className="toolbar-btn"
           title="新建文件夹"
         >
-          <FolderPlus size={16} />
+          <FolderOpen size={16} />
         </button>
         <button
-          onClick={onUploadDocument}
+          onClick={() => onUploadDocument?.()}
           className="toolbar-btn"
           title="上传文档"
         >
@@ -370,7 +398,8 @@ export function DocumentTree({
                 <TreeNodeComponent
                   key={node.path}
                   node={node}
-                  onNewFolder={onNewFolder}
+                  onNewDocument={onNewDocument}
+                  onUploadDocument={onUploadDocument}
                 />
               ))}
           </div>

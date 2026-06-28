@@ -8,6 +8,7 @@ import type { DocumentNode } from '@/types';
 interface UploadDocumentDialogProps {
   isOpen: boolean;
   onClose: () => void;
+  defaultCategory?: string;
 }
 
 interface ParsedDocument {
@@ -114,6 +115,7 @@ function extractTitleFromContent(body: string): string {
 export function UploadDocumentDialog({
   isOpen,
   onClose,
+  defaultCategory,
 }: UploadDocumentDialogProps) {
   const { createDocument, tree } = useDocumentStore();
   const { github } = useConfigStore();
@@ -124,9 +126,26 @@ export function UploadDocumentDialog({
   const [description, setDescription] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const [initialized, setInitialized] = useState(false);
 
   const docsDir = github.docsDir || 'docs';
   const directories = getDirectoryOptions(tree, docsDir);
+
+  // Set default category when dialog opens
+  if (isOpen && defaultCategory && !initialized) {
+    const relativePath = defaultCategory.startsWith(docsDir + '/')
+      ? defaultCategory.slice(docsDir.length + 1)
+      : defaultCategory;
+    setCategory(relativePath);
+    setInitialized(true);
+  }
+
+  if (!isOpen && initialized) {
+    setTimeout(() => {
+      setInitialized(false);
+      setCategory('');
+    }, 0);
+  }
 
   const resetState = useCallback(() => {
     setParsedDoc(null);

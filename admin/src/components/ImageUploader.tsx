@@ -5,10 +5,11 @@ import { useConfigStore } from '@/stores/configStore';
 
 interface ImageUploaderProps {
   onInsert: (url: string) => void;
+  currentPath?: string;
 }
 
-export function ImageUploader({ onInsert }: ImageUploaderProps) {
-  const { githubService, github } = useConfigStore();
+export function ImageUploader({ onInsert, currentPath }: ImageUploaderProps) {
+  const { imageService, github } = useConfigStore();
   const [isUploading, setIsUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -16,29 +17,38 @@ export function ImageUploader({ onInsert }: ImageUploaderProps) {
   const handleFileSelect = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
-      if (!file || !githubService) return;
+      if (!file || !imageService) return;
 
       setIsUploading(true);
       try {
         const reader = new FileReader();
         reader.onload = async () => {
-          const base64 = reader.result as string;
+          const base64 = (reader.result as string).split(',')[1] || '';
           const ext = file.name.split('.').pop() || 'png';
           const date = new Date();
-          const path = `${github.assetsDir || 'docs/assets'}/${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${Date.now()}.${ext}`;
+          const filename = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}_${Date.now()}.${ext}`;
 
-          const { sha } = await githubService.createOrUpdateFile(
-            github.owner,
-            github.repo,
-            path,
+          let category = 'general';
+          let docName = 'general';
+          if (currentPath) {
+            const parts = currentPath.replace(/^docs\//, '').split('/');
+            if (parts.length >= 2) {
+              category = parts.slice(0, -1).join('/');
+              docName = parts[parts.length - 1].replace(/\.md$/, '');
+            } else if (parts.length === 1) {
+              docName = parts[0].replace(/\.md$/, '');
+            }
+          }
+
+          const result = await imageService.uploadImage(
+            category,
+            docName,
+            filename,
             base64,
-            `assets: upload ${file.name}`,
-            github.branch,
           );
 
-          if (sha) {
-            const url = `https://raw.githubusercontent.com/${github.owner}/${github.repo}/${github.branch}/${path}`;
-            onInsert(url);
+          if (result.rawUrl) {
+            onInsert(result.rawUrl);
             setPreview(null);
           }
         };
@@ -54,7 +64,7 @@ export function ImageUploader({ onInsert }: ImageUploaderProps) {
         setIsUploading(false);
       }
     },
-    [githubService, github, onInsert],
+    [imageService, github, onInsert, currentPath],
   );
 
   return (
