@@ -84,6 +84,12 @@ export function ImageManager() {
 
   useEffect(() => { loadImages(); }, [loadImages]);
 
+  useEffect(() => {
+    if (showMoveDialog && moveCategory) {
+      loadDocNames(moveCategory);
+    }
+  }, [showMoveDialog, moveCategory, loadDocNames]);
+
   const handleFiles = useCallback(
     async (files: FileList | File[]) => {
       if (!imageService) return;
@@ -370,43 +376,31 @@ export function ImageManager() {
                 <label className="mb-1 block text-xs font-semibold text-surface-600 dark:text-surface-300">目标分类</label>
                 <select
                   value={moveCategory}
-                  onChange={(e) => setMoveCategory(e.target.value)}
-                  className="field-input w-full"
+                  onChange={(e) => {
+                    setMoveCategory(e.target.value);
+                    setMoveDocName('');
+                  }}
+                  className="move-select w-full"
                   disabled={moving}
                 >
                   {categories.map((cat) => (
                     <option key={cat} value={cat}>{cat}</option>
                   ))}
                 </select>
-                <input
-                  type="text"
-                  value={moveCategory}
-                  onChange={(e) => setMoveCategory(e.target.value)}
-                  className="field-input mt-1 w-full"
-                  placeholder="或输入新分类"
-                  disabled={moving}
-                />
               </div>
               <div>
                 <label className="mb-1 block text-xs font-semibold text-surface-600 dark:text-surface-300">目标文档</label>
                 <select
                   value={moveDocName}
                   onChange={(e) => setMoveDocName(e.target.value)}
-                  className="field-input w-full"
-                  disabled={moving}
+                  className="move-select w-full"
+                  disabled={moving || !moveCategory}
                 >
+                  <option value="">选择文档</option>
                   {moveCategory && docNames.map((name) => (
                     <option key={name} value={name}>{name}</option>
                   ))}
                 </select>
-                <input
-                  type="text"
-                  value={moveDocName}
-                  onChange={(e) => setMoveDocName(e.target.value)}
-                  className="field-input mt-1 w-full"
-                  placeholder="或输入新文档名"
-                  disabled={moving}
-                />
               </div>
             </div>
             <div className="mt-5 flex justify-end gap-2">
@@ -633,6 +627,35 @@ export function ImageManager() {
         .action-btn.danger:hover { background: rgba(239, 68, 68, 0.1); }
 
         .hidden { display: none; }
+
+        .move-select {
+          width: 100%;
+          padding: 10px 36px 10px 14px;
+          border-radius: 12px;
+          border: 1.5px solid rgba(15, 23, 42, 0.12);
+          background: #f8fafc;
+          font-size: 0.88rem;
+          color: #0f172a;
+          outline: none;
+          appearance: none;
+          background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%2394A3B8'%3E%3Cpath fill-rule='evenodd' d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z' clip-rule='evenodd'/%3E%3C/svg%3E");
+          background-position: right 10px center;
+          background-repeat: no-repeat;
+          background-size: 1.2rem;
+          cursor: pointer;
+          transition: all 0.18s;
+          box-sizing: border-box;
+        }
+        .dark .move-select {
+          background-color: rgba(30, 41, 59, 0.5);
+          border-color: rgba(255, 255, 255, 0.1);
+          color: #f1f5f9;
+          background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%2364748B'%3E%3Cpath fill-rule='evenodd' d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z' clip-rule='evenodd'/%3E%3C/svg%3E");
+        }
+        .move-select:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12); }
+        .move-select:disabled { opacity: 0.5; cursor: not-allowed; }
+        .move-select option { background: #fff; color: #0f172a; padding: 8px; }
+        .dark .move-select option { background: #1e293b; color: #f1f5f9; }
 
         .form-actions { display: flex; justify-content: flex-end; gap: 10px; padding-top: 4px; }
         .btn-large { height: 48px; padding: 0 36px; font-size: 0.95rem; }
