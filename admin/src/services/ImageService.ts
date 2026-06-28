@@ -301,6 +301,26 @@ export class ImageService {
     );
   }
 
+  async getImageContent(path: string): Promise<string> {
+    const { data } = await this.client.get(
+      `/repos/${this.owner}/${this.repo}/contents/${encodeURIComponent(path)}`,
+      { params: { ref: IMAGE_BRANCH } },
+    );
+    return data.content;
+  }
+
+  async moveImage(
+    oldPath: string,
+    oldSha: string,
+    newCategory: string,
+    newDocName: string,
+    newFilename: string,
+  ): Promise<UploadImageResult> {
+    const content = await this.getImageContent(oldPath);
+    await this.deleteImage(oldPath, oldSha);
+    return this.uploadImage(newCategory, newDocName, newFilename, content);
+  }
+
   async listCategories(): Promise<string[]> {
     const branch = IMAGE_BRANCH;
     if (!(await this.branchExists(branch))) return [];

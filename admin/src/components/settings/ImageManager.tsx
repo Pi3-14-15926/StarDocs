@@ -1,4 +1,4 @@
-import { Trash2, Upload } from 'lucide-react';
+import { FolderInput, Trash2, Upload } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import type { ImageItem } from '@/services/ImageService';
@@ -25,6 +25,12 @@ export function ImageManager() {
 
   const [deleteTarget, setDeleteTarget] = useState<ImageItem | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+  const [moveTarget, setMoveTarget] = useState<ImageItem | null>(null);
+  const [showMoveDialog, setShowMoveDialog] = useState(false);
+  const [moveCategory, setMoveCategory] = useState('');
+  const [moveDocName, setMoveDocName] = useState('');
+  const [moving, setMoving] = useState(false);
 
   const loadCategories = useCallback(async () => {
     if (!imageService) return;
@@ -142,6 +148,33 @@ export function ImageManager() {
       console.error('Delete failed:', e);
     }
   }, [imageService, deleteTarget, loadCategories]);
+
+  const handleMove = useCallback(async () => {
+    if (!imageService || !moveTarget) return;
+    const newCat = moveCategory.trim();
+    const newDoc = moveDocName.trim();
+    if (!newCat || !newDoc) return;
+
+    setMoving(true);
+    try {
+      await imageService.moveImage(
+        moveTarget.path,
+        moveTarget.sha,
+        newCat,
+        newDoc,
+        moveTarget.name,
+      );
+      setShowMoveDialog(false);
+      setMoveTarget(null);
+      setMoveCategory('');
+      setMoveDocName('');
+      loadImages();
+      loadCategories();
+    } catch (e: any) {
+      console.error('Move failed:', e);
+    }
+    setMoving(false);
+  }, [imageService, moveTarget, moveCategory, moveDocName, loadImages, loadCategories]);
 
   const getImageUrl = useCallback(
     (item: ImageItem) => resolveIconUrl(item.rawUrl, accel.iconCdnMode, accel.iconCdnCustomBase, github.owner, github.repo),
@@ -300,6 +333,9 @@ export function ImageManager() {
                     <div className="image-info">{img.category}/{img.docName} · {fmtSize(img.size)}</div>
                     <div className="image-actions">
                       <button type="button" onClick={() => copyUrl(url)} className="action-btn">复制 URL</button>
+                      <button type="button" onClick={() => { setMoveTarget(img); setMoveCategory(img.category); setMoveDocName(img.docName); setShowMoveDialog(true); }} className="action-btn">
+                        <FolderInput size={12} />
+                      </button>
                       <button type="button" onClick={() => { setDeleteTarget(img); setShowDeleteDialog(true); }} className="action-btn danger">
                         <Trash2 size={12} />
                       </button>
@@ -321,6 +357,71 @@ export function ImageManager() {
         confirmText="确认删除"
         danger
       />
+
+      {showMoveDialog && moveTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => !moving && setShowMoveDialog(false)}>
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl dark:bg-surface-800" onClick={(e) => e.stopPropagation()}>
+            <h3 className="mb-4 text-base font-bold text-surface-800 dark:text-surface-100">移动图片</h3>
+            <p className="mb-4 text-xs text-surface-500 dark:text-surface-400 truncate">
+              {moveTarget.name} → {moveCategory}/{moveDocName}
+            </p>
+            <div className="space-y-3">
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-surface-600 dark:text-surface-300">目标分类</label>
+                <select
+                  value={moveCategory}
+                  onChange={(e) => setMoveCategory(e.target.value)}
+                  className="field-input w-full"
+                  disabled={moving}
+                >
+                  {categories.map((cat) => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  value={moveCategory}
+                  onChange={(e) => setMoveCategory(e.target.value)}
+                  className="field-input mt-1 w-full"
+                  placeholder="或输入新分类"
+                  disabled={moving}
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-surface-600 dark:text-surface-300">目标文档</label>
+                <select
+                  value={moveDocName}
+                  onChange={(e) => setMoveDocName(e.target.value)}
+                  className="field-input w-full"
+                  disabled={moving}
+                >
+                  {moveCategory && docNames.map((name) => (
+                    <option key={name} value={name}>{name}</option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  value={moveDocName}
+                  onChange={(e) => setMoveDocName(e.target.value)}
+                  className="field-input mt-1 w-full"
+                  placeholder="或输入新文档名"
+                  disabled={moving}
+                />
+              </div>
+            </div>
+            <div className="mt-5 flex justify-end gap-2">
+              <button onClick={() => !moving && setShowMoveDialog(false)} className="btn-secondary px-4 py-2 text-xs" disabled={moving}>取消</button>
+              <button
+                onClick={handleMove}
+                className="btn-primary px-4 py-2 text-xs"
+                disabled={moving || !moveCategory.trim() || !moveDocName.trim()}
+              >
+                {moving ? '移动中...' : '确认移动'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style>{`
         .img-page {
