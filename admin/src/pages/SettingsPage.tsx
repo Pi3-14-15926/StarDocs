@@ -92,10 +92,7 @@ export function SettingsPage() {
         className={`settings-sidebar ${isMobile ? 'mobile' : ''} ${sidebarOpen ? 'open' : ''}`}
       >
         <div className="sidebar-header">
-          <button
-            onClick={() => navigate('/admin')}
-            className="sidebar-back"
-          >
+          <button onClick={() => navigate('/admin')} className="sidebar-back">
             <ArrowLeft size={16} />
             返回后台
           </button>

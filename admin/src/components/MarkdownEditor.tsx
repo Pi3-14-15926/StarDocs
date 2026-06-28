@@ -392,7 +392,9 @@ export function MarkdownEditor({
       const start = textarea.selectionStart;
       const end = textarea.selectionEnd;
       const newContent =
-        currentVal.substring(0, start) + externalAiText + currentVal.substring(end);
+        currentVal.substring(0, start) +
+        externalAiText +
+        currentVal.substring(end);
       setLocalContent(newContent);
       setIsEditing(true);
       setTimeout(() => {
@@ -402,7 +404,9 @@ export function MarkdownEditor({
     } else {
       const pos = textarea.selectionStart || currentVal.length;
       const newContent =
-        currentVal.substring(0, pos) + externalAiText + currentVal.substring(pos);
+        currentVal.substring(0, pos) +
+        externalAiText +
+        currentVal.substring(pos);
       setLocalContent(newContent);
       setIsEditing(true);
       setTimeout(() => {

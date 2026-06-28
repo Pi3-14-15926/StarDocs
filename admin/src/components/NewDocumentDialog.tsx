@@ -25,7 +25,11 @@ function getDirectoryOptions(nodes: DocumentNode[], prefix = ''): string[] {
   return result;
 }
 
-export function NewDocumentDialog({ isOpen, onClose, defaultCategory }: NewDocumentDialogProps) {
+export function NewDocumentDialog({
+  isOpen,
+  onClose,
+  defaultCategory,
+}: NewDocumentDialogProps) {
   const { createDocument, tree } = useDocumentStore();
   const { github } = useConfigStore();
   const [name, setName] = useState('');

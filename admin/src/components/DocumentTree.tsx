@@ -31,7 +31,12 @@ interface TreeNodeProps {
   onUploadDocument?: (folderPath: string) => void;
 }
 
-function TreeNodeComponent({ node, level = 0, onNewDocument, onUploadDocument }: TreeNodeProps) {
+function TreeNodeComponent({
+  node,
+  level = 0,
+  onNewDocument,
+  onUploadDocument,
+}: TreeNodeProps) {
   const {
     currentPath,
     loadDocument,
@@ -212,11 +217,17 @@ function TreeNodeComponent({ node, level = 0, onNewDocument, onUploadDocument }:
               <div className="dropdown-menu">
                 {isDir && (
                   <>
-                    <button onClick={handleNewDocument} className="dropdown-item">
+                    <button
+                      onClick={handleNewDocument}
+                      className="dropdown-item"
+                    >
                       <FilePlus size={15} />
                       新建文档
                     </button>
-                    <button onClick={handleUploadDocument} className="dropdown-item">
+                    <button
+                      onClick={handleUploadDocument}
+                      className="dropdown-item"
+                    >
                       <Upload size={15} />
                       上传文档
                     </button>

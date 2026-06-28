@@ -46,7 +46,11 @@ export function SetupPage() {
       <div className="login-card">
         <header className="login-header">
           <div className="logo-mark">
-            <img src="https://i.postimg.cc/j5yhCmXp/dog.png" alt="StarDocs" className="logo-img" />
+            <img
+              src="https://i.postimg.cc/j5yhCmXp/dog.png"
+              alt="StarDocs"
+              className="logo-img"
+            />
           </div>
           <h1 className="brand-name">StarDocs</h1>
           <p className="brand-sub">管理员登录</p>
@@ -93,12 +97,20 @@ export function SetupPage() {
 
         <div className="login-hint">
           <div className="hint-head">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" className="shield-icon">
-              <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/>
+            <svg
+              viewBox="0 0 24 24"
+              width="16"
+              height="16"
+              fill="currentColor"
+              className="shield-icon"
+            >
+              <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
             </svg>
             <span className="hint-title">安全认证</span>
           </div>
-          <p className="hint-desc">Token 仅存储在本地浏览器，不会上传到任何服务器</p>
+          <p className="hint-desc">
+            Token 仅存储在本地浏览器，不会上传到任何服务器
+          </p>
         </div>
       </div>
 
@@ -107,7 +119,13 @@ export function SetupPage() {
         <div className="deco-orb deco-orb-1" />
         <div className="deco-orb deco-orb-2" />
         <div className="deco-orb deco-orb-3" />
-        <svg className="deco-shield" viewBox="0 0 200 200" width="240" height="240" fill="none">
+        <svg
+          className="deco-shield"
+          viewBox="0 0 200 200"
+          width="240"
+          height="240"
+          fill="none"
+        >
           <defs>
             <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#6366f1" stopOpacity="0.18" />

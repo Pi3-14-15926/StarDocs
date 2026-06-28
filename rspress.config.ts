@@ -1,7 +1,6 @@
 import * as path from 'node:path';
 import { defineConfig } from '@rspress/core';
 import { transformerNotationHighlight } from '@shikijs/transformers';
-import readingTimePlugin from 'rspress-plugin-reading-time';
 import { pluginGiscus } from 'rspress-plugin-giscus';
 
 export default defineConfig({
@@ -25,9 +24,6 @@ export default defineConfig({
     dark: 'https://i.postimg.cc/j5yhCmXp/dog.png',
   },
   plugins: [
-    readingTimePlugin(
-      { defaultLocale: 'zh-CN' }
-    ),
     pluginGiscus({
       repo: 'Pi3-14-15926/StarDocs',
       repoId: 'R_kgDORnVr5Q',

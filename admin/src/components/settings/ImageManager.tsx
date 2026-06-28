@@ -44,7 +44,10 @@ export function ImageManager() {
 
   const loadDocNames = useCallback(
     async (category: string) => {
-      if (!imageService || !category) { setDocNames([]); return; }
+      if (!imageService || !category) {
+        setDocNames([]);
+        return;
+      }
       try {
         const names = await imageService.listDocNames(category);
         setDocNames(names);
@@ -70,7 +73,9 @@ export function ImageManager() {
     setLoading(false);
   }, [imageService, filterCategory, filterDocName]);
 
-  useEffect(() => { loadCategories(); }, [loadCategories]);
+  useEffect(() => {
+    loadCategories();
+  }, [loadCategories]);
 
   useEffect(() => {
     if (filterCategory) {
@@ -82,7 +87,9 @@ export function ImageManager() {
     }
   }, [filterCategory, loadDocNames]);
 
-  useEffect(() => { loadImages(); }, [loadImages]);
+  useEffect(() => {
+    loadImages();
+  }, [loadImages]);
 
   useEffect(() => {
     if (showMoveDialog && moveCategory) {
@@ -111,7 +118,10 @@ export function ImageManager() {
           const seq = String(i + 1).padStart(2, '0');
           const filename = `${dateStr}${seq}.webp`;
 
-          const compressed = await compressImage(file, { maxSize: 2048, quality: 0.8 });
+          const compressed = await compressImage(file, {
+            maxSize: 2048,
+            quality: 0.8,
+          });
           const base64 = await blobToBase64(compressed.blob);
 
           await imageService.uploadImage(
@@ -180,22 +190,42 @@ export function ImageManager() {
       console.error('Move failed:', e);
     }
     setMoving(false);
-  }, [imageService, moveTarget, moveCategory, moveDocName, loadImages, loadCategories]);
+  }, [
+    imageService,
+    moveTarget,
+    moveCategory,
+    moveDocName,
+    loadImages,
+    loadCategories,
+  ]);
 
   const getImageUrl = useCallback(
-    (item: ImageItem) => resolveIconUrl(item.rawUrl, accel.iconCdnMode, accel.iconCdnCustomBase, github.owner, github.repo),
+    (item: ImageItem) =>
+      resolveIconUrl(
+        item.rawUrl,
+        accel.iconCdnMode,
+        accel.iconCdnCustomBase,
+        github.owner,
+        github.repo,
+      ),
     [accel, github],
   );
 
   const copyUrl = useCallback(async (url: string) => {
-    try { await navigator.clipboard.writeText(url); } catch { /* ignore */ }
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      /* ignore */
+    }
   }, []);
 
   return (
     <div className="img-page">
       <div className="page-head">
         <div>
-          <h2 className="page-title"><span className="page-title-emoji">🖼️</span>图片管理</h2>
+          <h2 className="page-title">
+            <span className="page-title-emoji">🖼️</span>图片管理
+          </h2>
           <p className="page-desc">上传和管理文档图片，自动压缩为 WebP 格式</p>
         </div>
       </div>
@@ -203,7 +233,13 @@ export function ImageManager() {
       {/* 上传区 */}
       <section className="settings-card">
         <header className="card-head">
-          <div className="card-icon" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', boxShadow: '0 6px 20px rgba(99, 102, 241, 0.28)' }}>
+          <div
+            className="card-icon"
+            style={{
+              background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+              boxShadow: '0 6px 20px rgba(99, 102, 241, 0.28)',
+            }}
+          >
             <Upload size={20} />
           </div>
           <div>
@@ -240,7 +276,10 @@ export function ImageManager() {
         <div
           className={`upload-zone ${dragOver ? 'active' : ''} ${uploading ? 'disabled' : ''}`}
           onClick={() => fileInputRef.current?.click()}
-          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setDragOver(true);
+          }}
           onDragLeave={() => setDragOver(false)}
           onDrop={handleDrop}
         >
@@ -260,10 +299,13 @@ export function ImageManager() {
           </div>
           <div className="upload-text">
             <div className="upload-title">
-              {uploading ? `上传中 ${uploadProgress.done} / ${uploadProgress.total}` : '拖拽图片到此处，或点击选择'}
+              {uploading
+                ? `上传中 ${uploadProgress.done} / ${uploadProgress.total}`
+                : '拖拽图片到此处，或点击选择'}
             </div>
             <div className="upload-desc">
-              支持 PNG / JPG / GIF / SVG · 自动压缩为 80% 质量 WebP · 文件名：日期+序号
+              支持 PNG / JPG / GIF / SVG · 自动压缩为 80% 质量 WebP ·
+              文件名：日期+序号
             </div>
           </div>
         </div>
@@ -272,12 +314,22 @@ export function ImageManager() {
       {/* 图片库 */}
       <section className="settings-card">
         <header className="card-head">
-          <div className="card-icon" style={{ background: 'linear-gradient(135deg, #3b82f6, #2563eb)', boxShadow: '0 6px 20px rgba(59, 130, 246, 0.28)' }}>
+          <div
+            className="card-icon"
+            style={{
+              background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+              boxShadow: '0 6px 20px rgba(59, 130, 246, 0.28)',
+            }}
+          >
             <span style={{ fontSize: '1.2rem' }}>📁</span>
           </div>
           <div>
             <h3 className="card-title">图片库</h3>
-            <p className="card-desc">共 {images.length} 张图片{filterCategory ? ` · ${filterCategory}` : ''}{filterDocName ? ` / ${filterDocName}` : ''}</p>
+            <p className="card-desc">
+              共 {images.length} 张图片
+              {filterCategory ? ` · ${filterCategory}` : ''}
+              {filterDocName ? ` / ${filterDocName}` : ''}
+            </p>
           </div>
         </header>
 
@@ -291,7 +343,9 @@ export function ImageManager() {
             >
               <option value="">全部分类</option>
               {categories.map((cat) => (
-                <option key={cat} value={cat}>{cat}</option>
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
               ))}
             </select>
           </div>
@@ -305,12 +359,19 @@ export function ImageManager() {
             >
               <option value="">全部文档</option>
               {docNames.map((name) => (
-                <option key={name} value={name}>{name}</option>
+                <option key={name} value={name}>
+                  {name}
+                </option>
               ))}
             </select>
           </div>
           <div className="filter-actions">
-            <button type="button" onClick={loadImages} className="btn-secondary" disabled={loading}>
+            <button
+              type="button"
+              onClick={loadImages}
+              className="btn-secondary"
+              disabled={loading}
+            >
               刷新
             </button>
           </div>
@@ -335,14 +396,40 @@ export function ImageManager() {
                     <img src={url} alt={img.name} loading="lazy" />
                   </div>
                   <div className="image-meta">
-                    <div className="image-name" title={img.name}>{img.name}</div>
-                    <div className="image-info">{img.category}/{img.docName} · {fmtSize(img.size)}</div>
+                    <div className="image-name" title={img.name}>
+                      {img.name}
+                    </div>
+                    <div className="image-info">
+                      {img.category}/{img.docName} · {fmtSize(img.size)}
+                    </div>
                     <div className="image-actions">
-                      <button type="button" onClick={() => copyUrl(url)} className="action-btn">复制 URL</button>
-                      <button type="button" onClick={() => { setMoveTarget(img); setMoveCategory(img.category); setMoveDocName(img.docName); setShowMoveDialog(true); }} className="action-btn">
+                      <button
+                        type="button"
+                        onClick={() => copyUrl(url)}
+                        className="action-btn"
+                      >
+                        复制 URL
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMoveTarget(img);
+                          setMoveCategory(img.category);
+                          setMoveDocName(img.docName);
+                          setShowMoveDialog(true);
+                        }}
+                        className="action-btn"
+                      >
                         <FolderInput size={12} />
                       </button>
-                      <button type="button" onClick={() => { setDeleteTarget(img); setShowDeleteDialog(true); }} className="action-btn danger">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setDeleteTarget(img);
+                          setShowDeleteDialog(true);
+                        }}
+                        className="action-btn danger"
+                      >
                         <Trash2 size={12} />
                       </button>
                     </div>
@@ -356,7 +443,10 @@ export function ImageManager() {
 
       <ConfirmDialog
         isOpen={showDeleteDialog}
-        onCancel={() => { setShowDeleteDialog(false); setDeleteTarget(null); }}
+        onCancel={() => {
+          setShowDeleteDialog(false);
+          setDeleteTarget(null);
+        }}
         onConfirm={handleDelete}
         title="删除图片"
         message={`确定要删除图片「${deleteTarget?.name}」吗？此操作不可恢复。`}
@@ -365,15 +455,25 @@ export function ImageManager() {
       />
 
       {showMoveDialog && moveTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => !moving && setShowMoveDialog(false)}>
-          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl dark:bg-surface-800" onClick={(e) => e.stopPropagation()}>
-            <h3 className="mb-4 text-base font-bold text-surface-800 dark:text-surface-100">移动图片</h3>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+          onClick={() => !moving && setShowMoveDialog(false)}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl dark:bg-surface-800"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="mb-4 text-base font-bold text-surface-800 dark:text-surface-100">
+              移动图片
+            </h3>
             <p className="mb-4 text-xs text-surface-500 dark:text-surface-400 truncate">
               {moveTarget.name} → {moveCategory}/{moveDocName}
             </p>
             <div className="space-y-3">
               <div>
-                <label className="mb-1 block text-xs font-semibold text-surface-600 dark:text-surface-300">目标分类</label>
+                <label className="mb-1 block text-xs font-semibold text-surface-600 dark:text-surface-300">
+                  目标分类
+                </label>
                 <select
                   value={moveCategory}
                   onChange={(e) => {
@@ -384,12 +484,16 @@ export function ImageManager() {
                   disabled={moving}
                 >
                   {categories.map((cat) => (
-                    <option key={cat} value={cat}>{cat}</option>
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="mb-1 block text-xs font-semibold text-surface-600 dark:text-surface-300">目标文档</label>
+                <label className="mb-1 block text-xs font-semibold text-surface-600 dark:text-surface-300">
+                  目标文档
+                </label>
                 <select
                   value={moveDocName}
                   onChange={(e) => setMoveDocName(e.target.value)}
@@ -397,14 +501,23 @@ export function ImageManager() {
                   disabled={moving || !moveCategory}
                 >
                   <option value="">选择文档</option>
-                  {moveCategory && docNames.map((name) => (
-                    <option key={name} value={name}>{name}</option>
-                  ))}
+                  {moveCategory &&
+                    docNames.map((name) => (
+                      <option key={name} value={name}>
+                        {name}
+                      </option>
+                    ))}
                 </select>
               </div>
             </div>
             <div className="mt-5 flex justify-end gap-2">
-              <button onClick={() => !moving && setShowMoveDialog(false)} className="btn-secondary px-4 py-2 text-xs" disabled={moving}>取消</button>
+              <button
+                onClick={() => !moving && setShowMoveDialog(false)}
+                className="btn-secondary px-4 py-2 text-xs"
+                disabled={moving}
+              >
+                取消
+              </button>
               <button
                 onClick={handleMove}
                 className="btn-primary px-4 py-2 text-xs"

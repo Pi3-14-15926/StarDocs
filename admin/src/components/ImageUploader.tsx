@@ -2,7 +2,7 @@ import { ImageIcon, X } from 'lucide-react';
 import { useCallback, useRef, useState } from 'react';
 import { showAlert } from '@/hooks/useAlert';
 import { useConfigStore } from '@/stores/configStore';
-import { compressImage, blobToBase64 } from '@/utils/imageCompressor';
+import { blobToBase64, compressImage } from '@/utils/imageCompressor';
 
 interface ImageUploaderProps {
   onInsert: (url: string) => void;

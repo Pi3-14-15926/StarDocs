@@ -1,4 +1,5 @@
-import { Layout as BasicLayout } from '@rspress/core/theme-original';
+import { Layout as BasicLayout, getCustomMDXComponent as basicGetCustomMDXComponent } from '@rspress/core/theme-original';
+import { ArticleMeta } from './components/ArticleMeta';
 import './index.css';
 
 const AdminLink = () => (
@@ -11,7 +12,22 @@ const AdminLink = () => (
   </a>
 );
 
-const Layout = () => <BasicLayout afterNavMenu={<AdminLink />} />;
+const Layout = () => {
+  const { h1: OriginalH1 } = basicGetCustomMDXComponent();
+  return (
+    <BasicLayout
+      afterNavMenu={<AdminLink />}
+      components={{
+        h1: (props) => (
+          <>
+            <OriginalH1 {...props} />
+            <ArticleMeta />
+          </>
+        ),
+      }}
+    />
+  );
+};
 
 export { Layout };
 export * from '@rspress/core/theme-original';

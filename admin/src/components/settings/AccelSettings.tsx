@@ -41,7 +41,13 @@ export function AccelSettings() {
       {/* CDN 加速策略 */}
       <section className="settings-card">
         <header className="card-head">
-          <div className="card-icon" style={{ background: 'linear-gradient(135deg, #6366f1, #4f46e5)', boxShadow: '0 6px 20px rgba(99, 102, 241, 0.28)' }}>
+          <div
+            className="card-icon"
+            style={{
+              background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
+              boxShadow: '0 6px 20px rgba(99, 102, 241, 0.28)',
+            }}
+          >
             <Globe size={20} />
           </div>
           <div>
@@ -88,7 +94,9 @@ export function AccelSettings() {
               placeholder="https://your-cdn.example.com/"
             />
             <p className="field-hint">
-              最终 URL 形如：{iconCdnCustomBase || 'https://your-cdn.example.com/'}raw.githubusercontent.com/owner/repo/branch/path
+              最终 URL 形如：
+              {iconCdnCustomBase || 'https://your-cdn.example.com/'}
+              raw.githubusercontent.com/owner/repo/branch/path
             </p>
           </div>
         )}
@@ -98,7 +106,8 @@ export function AccelSettings() {
       <section className="settings-card hint-card">
         <div className="hint-content">
           <p className="hint-text">
-            配置后 <code className="hint-code">raw.githubusercontent.com</code> 域名的图标 URL 会自动替换为更快镜像。
+            配置后 <code className="hint-code">raw.githubusercontent.com</code>{' '}
+            域名的图标 URL 会自动替换为更快镜像。
           </p>
           <p className="hint-text">
             GitHub 仓库配置（owner/repo/token）请到
@@ -109,7 +118,11 @@ export function AccelSettings() {
       </section>
 
       <div className="form-actions">
-        <button type="button" onClick={handleSave} className="btn-primary btn-large">
+        <button
+          type="button"
+          onClick={handleSave}
+          className="btn-primary btn-large"
+        >
           <Save size={16} />
           {saved ? '已保存 ✓' : '保存设置'}
         </button>

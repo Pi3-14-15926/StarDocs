@@ -3,12 +3,37 @@ import { useCallback, useState } from 'react';
 import { useConfigStore } from '@/stores/configStore';
 
 const PROVIDERS = [
-  { id: 'openai', name: 'OpenAI', apiUrl: 'https://api.openai.com/v1/chat/completions' },
-  { id: 'deepseek', name: 'DeepSeek', apiUrl: 'https://api.deepseek.com/v1/chat/completions' },
-  { id: 'openrouter', name: 'OpenRouter', apiUrl: 'https://openrouter.ai/api/v1/chat/completions' },
-  { id: 'siliconflow', name: '硅基流动', apiUrl: 'https://api.siliconflow.cn/v1/chat/completions' },
-  { id: 'moonshot', name: 'Moonshot', apiUrl: 'https://api.moonshot.cn/v1/chat/completions' },
-  { id: 'dashscope', name: '阿里百炼', apiUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions' },
+  {
+    id: 'openai',
+    name: 'OpenAI',
+    apiUrl: 'https://api.openai.com/v1/chat/completions',
+  },
+  {
+    id: 'deepseek',
+    name: 'DeepSeek',
+    apiUrl: 'https://api.deepseek.com/v1/chat/completions',
+  },
+  {
+    id: 'openrouter',
+    name: 'OpenRouter',
+    apiUrl: 'https://openrouter.ai/api/v1/chat/completions',
+  },
+  {
+    id: 'siliconflow',
+    name: '硅基流动',
+    apiUrl: 'https://api.siliconflow.cn/v1/chat/completions',
+  },
+  {
+    id: 'moonshot',
+    name: 'Moonshot',
+    apiUrl: 'https://api.moonshot.cn/v1/chat/completions',
+  },
+  {
+    id: 'dashscope',
+    name: '阿里百炼',
+    apiUrl:
+      'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
+  },
   { id: 'custom', name: '自定义', apiUrl: '' },
 ];
 
@@ -58,7 +83,13 @@ export function AISettings() {
       {/* 服务商 */}
       <section className="settings-card">
         <header className="card-head">
-          <div className="card-icon" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', boxShadow: '0 6px 20px rgba(99, 102, 241, 0.28)' }}>
+          <div
+            className="card-icon"
+            style={{
+              background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+              boxShadow: '0 6px 20px rgba(99, 102, 241, 0.28)',
+            }}
+          >
             <Sparkles size={20} />
           </div>
           <div>
@@ -83,7 +114,13 @@ export function AISettings() {
       {/* 配置 */}
       <section className="settings-card">
         <header className="card-head">
-          <div className="card-icon" style={{ background: 'linear-gradient(135deg, #3b82f6, #2563eb)', boxShadow: '0 6px 20px rgba(59, 130, 246, 0.28)' }}>
+          <div
+            className="card-icon"
+            style={{
+              background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+              boxShadow: '0 6px 20px rgba(59, 130, 246, 0.28)',
+            }}
+          >
             <Save size={20} />
           </div>
           <div>
@@ -122,7 +159,9 @@ export function AISettings() {
                 className="field-input"
               >
                 {MODELS[provider].map((m) => (
-                  <option key={m} value={m}>{m}</option>
+                  <option key={m} value={m}>
+                    {m}
+                  </option>
                 ))}
               </select>
             ) : (
@@ -139,7 +178,11 @@ export function AISettings() {
       </section>
 
       <div className="form-actions">
-        <button type="button" onClick={handleSave} className="btn-primary btn-large">
+        <button
+          type="button"
+          onClick={handleSave}
+          className="btn-primary btn-large"
+        >
           <Save size={16} />
           {saved ? '已保存 ✓' : '保存配置'}
         </button>
