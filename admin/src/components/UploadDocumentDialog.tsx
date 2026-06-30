@@ -133,10 +133,7 @@ export function UploadDocumentDialog({
 
   // Set default category when dialog opens
   if (isOpen && defaultCategory && !initialized) {
-    const relativePath = defaultCategory.startsWith(docsDir + '/')
-      ? defaultCategory.slice(docsDir.length + 1)
-      : defaultCategory;
-    setCategory(relativePath);
+    setCategory(defaultCategory);
     setInitialized(true);
   }
 
