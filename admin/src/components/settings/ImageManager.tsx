@@ -213,7 +213,7 @@ export function ImageManager() {
 
   const copyUrl = useCallback(async (url: string) => {
     try {
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(`![image](${url})`);
     } catch {
       /* ignore */
     }

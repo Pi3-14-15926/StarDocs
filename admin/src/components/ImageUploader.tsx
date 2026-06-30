@@ -3,6 +3,7 @@ import { useCallback, useRef, useState } from 'react';
 import { showAlert } from '@/hooks/useAlert';
 import { useConfigStore } from '@/stores/configStore';
 import { blobToBase64, compressImage } from '@/utils/imageCompressor';
+import { resolveIconUrl } from '@/utils/cdnUrl';
 
 interface ImageUploaderProps {
   onInsert: (url: string) => void;
@@ -10,7 +11,7 @@ interface ImageUploaderProps {
 }
 
 export function ImageUploader({ onInsert, currentPath }: ImageUploaderProps) {
-  const { imageService } = useConfigStore();
+  const { imageService, accel, github } = useConfigStore();
   const [isUploading, setIsUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -75,7 +76,8 @@ export function ImageUploader({ onInsert, currentPath }: ImageUploaderProps) {
         );
 
         if (result.rawUrl) {
-          onInsert(result.rawUrl);
+          const cdnUrl = resolveIconUrl(result.rawUrl, accel.iconCdnMode, accel.iconCdnCustomBase, github.owner, github.repo);
+          onInsert(cdnUrl);
           setPreview(null);
         }
       } catch (error) {
