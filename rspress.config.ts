@@ -7,9 +7,6 @@ export default defineConfig({
   // base: '/Docs/',
   root: path.join(__dirname, 'docs'),
   lang: 'zh',
-  route: {
-    cleanUrls: true,
-  },
   i18nSource: {
     editLinkText: {
       zh: '编辑此页',
