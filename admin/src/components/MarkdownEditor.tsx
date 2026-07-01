@@ -20,7 +20,10 @@ import {
 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { showAlert } from '@/hooks/useAlert';
+import { useConfigStore } from '@/stores/configStore';
 import { useDocumentStore } from '@/stores/documentStore';
+import { blobToBase64, compressImage } from '@/utils/imageCompressor';
+import { resolveIconUrl } from '@/utils/cdnUrl';
 
 interface HistoryState {
   content: string;
@@ -214,6 +217,7 @@ export function MarkdownEditor({
     lastSaved,
     renameDocument,
   } = useDocumentStore();
+  const { imageService, accel, github } = useConfigStore();
   const [isPreview, setIsPreview] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -419,6 +423,115 @@ export function MarkdownEditor({
     onExternalAiDone?.();
   }, [externalAiText, externalAiKey]);
 
+  const handlePaste = useCallback(
+    async (e: React.ClipboardEvent) => {
+      const items = Array.from(e.clipboardData.items);
+      const imageItem = items.find((item) => item.type.startsWith('image/'));
+      if (!imageItem || !imageService) return;
+
+      e.preventDefault();
+      const file = imageItem.getAsFile();
+      if (!file) return;
+
+      showAlert('info', '粘贴图片', '正在上传剪贴板图片...');
+
+      try {
+        const compressed = await compressImage(file, {
+          quality: 0.8,
+          mimeType: 'image/webp',
+        });
+        const base64 = await blobToBase64(compressed.blob);
+
+        let category = 'general';
+        let docName = 'general';
+        if (currentPath) {
+          const parts = currentPath.replace(/^docs\//, '').split('/');
+          if (parts.length >= 2) {
+            category = parts.slice(0, -1).join('/');
+            docName = parts[parts.length - 1].replace(/\.md$/, '');
+          } else if (parts.length === 1) {
+            docName = parts[0].replace(/\.md$/, '');
+          }
+        }
+
+        const now = new Date();
+        const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+
+        let seq = 1;
+        try {
+          const existing = await imageService.listImages(category, docName);
+          const todayPrefix = `${dateStr}_`;
+          const todayImages = existing.filter((img) =>
+            img.name.startsWith(todayPrefix),
+          );
+          if (todayImages.length > 0) {
+            const maxSeq = todayImages.reduce((max, img) => {
+              const match = img.name.match(/_(\d+)\.webp$/);
+              if (match) {
+                const num = parseInt(match[1], 10);
+                return num > max ? num : max;
+              }
+              return max;
+            }, 0);
+            seq = maxSeq + 1;
+          }
+        } catch {
+          seq = 1;
+        }
+
+        const filename = `${dateStr}_${String(seq).padStart(4, '0')}.webp`;
+        const result = await imageService.uploadImage(
+          category,
+          docName,
+          filename,
+          base64,
+        );
+
+        if (result.rawUrl) {
+          const cdnUrl = resolveIconUrl(
+            result.rawUrl,
+            accel.iconCdnMode,
+            accel.iconCdnCustomBase,
+            github.owner,
+            github.repo,
+          );
+
+          const textarea = textareaRef.current;
+          if (textarea) {
+            if (!isEditing) {
+              setIsEditing(true);
+              setLocalContent(currentContent);
+            }
+            const currentVal = isEditing ? localContent : currentContent;
+            const pos = textarea.selectionStart || currentVal.length;
+            const insertion = `![image](${cdnUrl})`;
+            const newContent =
+              currentVal.substring(0, pos) +
+              insertion +
+              currentVal.substring(pos);
+            setLocalContent(newContent);
+            setIsEditing(true);
+            setTimeout(() => {
+              textarea.focus();
+              const cursorPos = pos + insertion.length;
+              textarea.setSelectionRange(cursorPos, cursorPos);
+            }, 0);
+          }
+
+          showAlert('success', '上传成功', '图片已插入到编辑器');
+        }
+      } catch (error) {
+        console.error('Paste image upload failed:', error);
+        showAlert(
+          'error',
+          '粘贴上传失败',
+          error instanceof Error ? error.message : '请重试',
+        );
+      }
+    },
+    [imageService, accel, github, currentPath, isEditing, localContent, currentContent],
+  );
+
   if (!currentPath) {
     return (
       <div className="flex h-full flex-col items-center justify-center text-surface-400">
@@ -530,8 +643,9 @@ export function MarkdownEditor({
               setIsEditing(true);
               setLocalContent(e.target.value);
             }}
+            onPaste={handlePaste}
             className="h-full w-full resize-none border-none bg-transparent p-6 font-mono text-sm leading-relaxed focus:outline-none dark:text-surface-200"
-            placeholder="开始编写 Markdown..."
+            placeholder="开始编写 Markdown...（支持粘贴图片）"
             spellCheck={false}
           />
         )}
